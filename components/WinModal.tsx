@@ -69,7 +69,7 @@ export default function WinModal({ record, puzzle, onNewGame, onClose }: WinModa
           if (e instanceof DOMException && e.name === "AbortError") return;
         }
       }
-      await copyToClipboard(`${text}\n${url}`, "링크를 복사했어요 — 붙여넣어 자랑하세요");
+      await copyToClipboard(`${text}\n${url}`, "링크를 복사했어요");
     } catch {
       showToast("공유에 실패했어요");
     } finally {
@@ -125,15 +125,12 @@ export default function WinModal({ record, puzzle, onNewGame, onClose }: WinModa
         className="relative w-full max-w-md pb-[env(safe-area-inset-bottom)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex flex-col items-center gap-1.5">
+        <div className="mb-4 flex flex-col items-center">
           <p
             className="font-display -rotate-2 text-[2.6rem] leading-none"
             style={{ color: "var(--on-flood)", textShadow: "4px 4px 0 #141414" }}
           >
             클리어!
-          </p>
-          <p className="text-[0.8rem] font-extrabold" style={{ color: "var(--pop)" }}>
-            오늘 퍼즐 깼다. 자랑 각.
           </p>
         </div>
 

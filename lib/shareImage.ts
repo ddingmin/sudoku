@@ -187,9 +187,6 @@ export async function renderShareImage(record: ShareRecord): Promise<Blob> {
   ctx.fillText("클리어!", 0, 0);
   ctx.restore();
   ctx.textAlign = "center";
-  ctx.fillStyle = C.pop;
-  ctx.font = `800 34px ${SANS}`;
-  ctx.fillText("오늘 퍼즐 깼다. 자랑 각.", W / 2, 268);
 
   // 카드
   const cx = 100;

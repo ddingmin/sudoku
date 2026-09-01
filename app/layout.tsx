@@ -17,10 +17,10 @@ export const metadata: Metadata = {
         : "http://localhost:3000"),
   ),
   title: "스도쿠 — 매일 한 판",
-  description: "매일 자정 새로운 퍼즐. 기록 세우고, 스토리에 자랑하고, 친구를 도발하세요.",
+  description: "매일 자정 새로운 퍼즐이 열리는 스도쿠. 기록을 공유할 수 있습니다.",
   openGraph: {
     title: "스도쿠 — 매일 한 판",
-    description: "매일 자정 새로운 퍼즐. 기록 세우고, 스토리에 자랑하고, 친구를 도발하세요.",
+    description: "매일 자정 새로운 퍼즐이 열리는 스도쿠. 기록을 공유할 수 있습니다.",
     type: "website",
   },
 };

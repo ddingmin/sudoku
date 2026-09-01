@@ -70,9 +70,6 @@ export default async function SharePage({ params }: Props) {
             <path d="m12 5 7 7-7 7" />
           </svg>
         </Link>
-        <p className="text-[0.66rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-          가입 없음 · 설치 없음 · 그냥 바로 시작
-        </p>
       </div>
 
       {/* 하단 체커 스트립 */}
