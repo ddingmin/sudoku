@@ -5,10 +5,13 @@ import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { ShareRecord, encodeRecord, shareText } from "@/lib/encode";
 import { downloadShareImage, shareImageFile } from "@/lib/shareImage";
+import { computeHighlights, cellName } from "@/lib/recap";
 import ShareCard from "./ShareCard";
+import RecapBoard from "./RecapBoard";
 
 interface WinModalProps {
   record: ShareRecord;
+  puzzle?: number[] | null; // 주어진 숫자 그리드 (리캡 리플레이용)
   onNewGame: () => void;
   onClose: () => void;
 }
@@ -26,7 +29,7 @@ function fireConfetti() {
   );
 }
 
-export default function WinModal({ record, onNewGame, onClose }: WinModalProps) {
+export default function WinModal({ record, puzzle, onNewGame, onClose }: WinModalProps) {
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -96,21 +99,21 @@ export default function WinModal({ record, onNewGame, onClose }: WinModalProps) 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden p-4 sm:items-center"
-      style={{ background: "var(--primary)" }}
+      style={{ background: "var(--flood)" }}
       onClick={onClose}
     >
       {/* 상하단 체커 패턴 */}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-50"
         style={{
-          background: "repeating-conic-gradient(var(--primary-strong) 0% 25%, transparent 0% 50%)",
+          background: "repeating-conic-gradient(var(--flood-deep) 0% 25%, transparent 0% 50%)",
           backgroundSize: "32px 32px",
         }}
       />
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 h-24 opacity-50"
         style={{
-          background: "repeating-conic-gradient(var(--primary-strong) 0% 25%, transparent 0% 50%)",
+          background: "repeating-conic-gradient(var(--flood-deep) 0% 25%, transparent 0% 50%)",
           backgroundSize: "32px 32px",
         }}
       />
@@ -125,7 +128,7 @@ export default function WinModal({ record, onNewGame, onClose }: WinModalProps) 
         <div className="mb-4 flex flex-col items-center gap-1.5">
           <p
             className="font-display -rotate-2 text-[2.6rem] leading-none"
-            style={{ color: "var(--on-primary)", textShadow: "4px 4px 0 var(--shadow-ink)" }}
+            style={{ color: "var(--on-flood)", textShadow: "4px 4px 0 #141414" }}
           >
             클리어!
           </p>
@@ -133,6 +136,44 @@ export default function WinModal({ record, onNewGame, onClose }: WinModalProps) 
             오늘 퍼즐 깼다. 자랑 각.
           </p>
         </div>
+
+        {/* 풀이 리캡: 타임랩스 + 하이라이트 */}
+        {record.moves && record.moves.length > 0 && puzzle && (
+          <div
+            className="mb-3 flex items-center gap-4 p-4"
+            style={{
+              background: "var(--surface)",
+              border: "2px solid var(--edge)",
+              borderRadius: "var(--r-lg)",
+              boxShadow: "var(--shadow-md)",
+            }}
+          >
+            <RecapBoard puzzle={puzzle} moves={record.moves} size={128} />
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <p className="text-[0.66rem] font-extrabold tracking-widest" style={{ color: "var(--ink-faint)" }}>
+                나의 풀이 리캡
+              </p>
+              {(() => {
+                const h = computeHighlights(record.moves!);
+                const rows: Array<[string, string]> = [
+                  ...(h.longestThink
+                    ? ([["최장 고민", `${cellName(h.longestThink.i)} · ${h.longestThink.sec}초`]] as Array<[string, string]>)
+                    : []),
+                  ...(h.lastSpurt
+                    ? ([["라스트 스퍼트", `마지막 ${h.lastSpurt.cells}칸 ${h.lastSpurt.sec}초`]] as Array<[string, string]>)
+                    : []),
+                  ["오답 칸", h.errorCells > 0 ? `${h.errorCells}곳` : "없음 (클린!)"],
+                ];
+                return rows.map(([label, value]) => (
+                  <p key={label} className="truncate text-[0.74rem] font-bold leading-snug">
+                    <span style={{ color: "var(--ink-faint)" }}>{label} </span>
+                    <span style={{ color: "var(--ink)" }}>{value}</span>
+                  </p>
+                ));
+              })()}
+            </div>
+          </div>
+        )}
 
         <ShareCard record={record} />
 
@@ -191,11 +232,11 @@ export default function WinModal({ record, onNewGame, onClose }: WinModalProps) 
             <button
               onClick={onNewGame}
               className="text-[0.82rem] font-extrabold underline underline-offset-4"
-              style={{ color: "var(--on-primary)" }}
+              style={{ color: "var(--on-flood)" }}
             >
               한 판 더 →
             </button>
-            <button onClick={onClose} className="text-[0.82rem] font-bold opacity-80" style={{ color: "var(--on-primary)" }}>
+            <button onClick={onClose} className="text-[0.82rem] font-bold opacity-80" style={{ color: "var(--on-flood)" }}>
               닫기
             </button>
           </div>

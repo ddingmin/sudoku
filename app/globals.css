@@ -26,6 +26,12 @@
   --on-pop: #141414;
   --danger: #e93a5e; /* 체리 — 오답/신기록 스티커 */
   --danger-wash: #ffdde4;
+  --swipe-bg: var(--pop); /* 형광펜 스와이프 — 다크에선 워시로 낮춤 */
+
+  /* 플러드(클리어 화면 배경) — 테마 무관 고정 */
+  --flood: #2b4cff;
+  --flood-deep: #1e38cc;
+  --on-flood: #ffffff;
 
   /* ── 색: 라인 ── */
   --cell-line: #ece9e0; /* 셀 헤어라인 */
@@ -68,6 +74,7 @@
     --on-pop: #141414;
     --danger: #ff5c7e;
     --danger-wash: #3a2028;
+    --swipe-bg: rgba(200, 240, 77, 0.28);
     --cell-line: #2e2c36;
     --box-line: #565360;
     --edge: #3e3b47;
@@ -91,6 +98,7 @@
   --on-pop: #141414;
   --danger: #ff5c7e;
   --danger-wash: #3a2028;
+  --swipe-bg: rgba(200, 240, 77, 0.28);
   --cell-line: #2e2c36;
   --box-line: #565360;
   --edge: #3e3b47;
@@ -164,7 +172,7 @@ body {
   right: -6px;
   top: 45%;
   bottom: 4%;
-  background: var(--pop);
+  background: var(--swipe-bg);
   border-radius: 6px;
   transform: rotate(-2deg);
 }
