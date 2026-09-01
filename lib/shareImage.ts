@@ -204,7 +204,7 @@ export async function renderShareImage(record: ShareRecord): Promise<Blob> {
   ctx.textAlign = "right";
   ctx.fillStyle = C.inkFaint;
   ctx.font = `700 30px ${SANS}`;
-  const sub = `${record.daily ? `#${dailyNumber(record.dateKey)} · ` : "자유 퍼즐 · "}${record.dateKey.replace(/-/g, ".")}`;
+  const sub = `${record.daily ? `#${dailyNumber(record.dateKey)} · ` : "자유 스도쿠 · "}${record.dateKey.replace(/-/g, ".")}`;
   ctx.fillText(sub, cx + cw - 56, cy + 104);
 
   const stats: Array<[string, string]> = [

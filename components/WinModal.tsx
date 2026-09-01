@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { ShareRecord, encodeRecord, shareText } from "@/lib/encode";
 import { downloadShareImage, shareImageFile } from "@/lib/shareImage";
-import { computeHighlights, cellName } from "@/lib/recap";
+import { highlightLines } from "@/lib/recap";
 import ShareCard from "./ShareCard";
 import RecapBoard from "./RecapBoard";
 
@@ -148,26 +148,13 @@ export default function WinModal({ record, puzzle, onNewGame, onClose }: WinModa
             <RecapBoard puzzle={puzzle} moves={record.moves} size={128} />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <p className="text-[0.66rem] font-extrabold tracking-widest" style={{ color: "var(--ink-faint)" }}>
-                나의 풀이 리캡
+                이번 판 돌아보기
               </p>
-              {(() => {
-                const h = computeHighlights(record.moves!);
-                const rows: Array<[string, string]> = [
-                  ...(h.longestThink
-                    ? ([["최장 고민", `${cellName(h.longestThink.i)} · ${h.longestThink.sec}초`]] as Array<[string, string]>)
-                    : []),
-                  ...(h.lastSpurt
-                    ? ([["라스트 스퍼트", `마지막 ${h.lastSpurt.cells}칸 ${h.lastSpurt.sec}초`]] as Array<[string, string]>)
-                    : []),
-                  ["오답 칸", h.errorCells > 0 ? `${h.errorCells}곳` : "없음 (클린!)"],
-                ];
-                return rows.map(([label, value]) => (
-                  <p key={label} className="truncate text-[0.74rem] font-bold leading-snug">
-                    <span style={{ color: "var(--ink-faint)" }}>{label} </span>
-                    <span style={{ color: "var(--ink)" }}>{value}</span>
-                  </p>
-                ));
-              })()}
+              {highlightLines(record.moves, record.mistakes, record.hints).map((line) => (
+                <p key={line} className="text-[0.74rem] font-bold leading-snug" style={{ color: "var(--ink)" }}>
+                  {line}
+                </p>
+              ))}
             </div>
           </div>
         )}

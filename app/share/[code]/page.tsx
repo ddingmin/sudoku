@@ -49,7 +49,7 @@ export default async function SharePage({ params }: Props) {
           </span>
         </h1>
         <p className="text-[0.82rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-          친구가 오늘 퍼즐을 이렇게 깼어요
+          친구가 오늘의 스도쿠를 이렇게 깼어요
         </p>
       </div>
 

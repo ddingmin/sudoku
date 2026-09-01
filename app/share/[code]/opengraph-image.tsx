@@ -171,7 +171,7 @@ export default async function OgImage({ params }: { params: Promise<{ code: stri
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontFamily: "Bagel Fat One", fontSize: 40, color: C.ink }}>스도쿠</span>
             <span style={{ fontSize: 22, fontWeight: 500, color: C.inkFaint }}>
-              {record.daily ? `#${dailyNumber(record.dateKey)} · ` : "자유 퍼즐 · "}
+              {record.daily ? `#${dailyNumber(record.dateKey)} · ` : "자유 스도쿠 · "}
               {record.dateKey.replace(/-/g, ".")}
             </span>
           </div>

@@ -85,7 +85,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
             className="chunky-sm chunky-press flex items-center gap-1.5 rounded-full! py-2 pl-3.5 pr-2.5 text-[0.78rem] font-extrabold"
             style={{ color: "var(--ink)" }}
           >
-            {daily ? `오늘의 퍼즐 #${dailyNumber(dateKey)}` : "자유 퍼즐"}
+            {daily ? `오늘의 스도쿠 #${dailyNumber(dateKey)}` : "자유 스도쿠"}
             <span style={{ color: "var(--primary)" }}>{DIFFICULTY_LABEL[difficulty]}</span>
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" strokeWidth="3" strokeLinecap="round">
               <path d="m6 9 6 6 6-6" />
@@ -104,7 +104,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
                 {[true, false].map((isDaily) => (
                   <div key={String(isDaily)}>
                     <p className="px-2.5 pb-1 pt-2 text-[0.62rem] font-extrabold uppercase tracking-wider" style={{ color: "var(--ink-faint)" }}>
-                      {isDaily ? `오늘의 퍼즐 · ${dateKey}` : "자유 퍼즐 · 무작위"}
+                      {isDaily ? `오늘의 스도쿠 · ${dateKey}` : "자유 스도쿠 · 무작위"}
                     </p>
                     {DIFFICULTIES.map((d) => {
                       const active = daily === isDaily && d === difficulty;

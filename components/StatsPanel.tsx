@@ -108,7 +108,7 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
             className="mt-3 p-6 text-center text-[0.8rem] font-bold"
             style={{ background: "var(--surface)", border: "2px dashed var(--cell-line)", borderRadius: "var(--r-md)", color: "var(--ink-faint)" }}
           >
-            아직 클리어한 퍼즐이 없어요.
+            아직 클리어한 스도쿠가 없어요.
             <br />첫 판 깨면 여기부터 채워집니다.
           </p>
         ) : (
@@ -135,7 +135,7 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
                         </span>
                       )}
                       <span className="ml-1.5 text-[0.66rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-                        {h.daily ? "오늘의 퍼즐" : "자유"} · {h.dateKey.replace(/-/g, ".")}
+                        {h.daily ? "오늘의 스도쿠" : "자유"} · {h.dateKey.replace(/-/g, ".")}
                       </span>
                     </p>
                     <p className="tabular mt-1 text-[0.72rem] font-bold" style={{ color: "var(--ink-soft)" }}>

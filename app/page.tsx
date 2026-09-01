@@ -140,7 +140,7 @@ export default function Home() {
           <div className="flex items-center justify-center gap-2 pb-1">
             <span className="checker h-2 w-11" />
             <p className="text-center text-[0.65rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-              내일 퍼즐은 자정에 열려요
+              새로운 스도쿠는 자정에 열려요
             </p>
             <span className="checker h-2 w-11" />
           </div>

@@ -53,7 +53,7 @@ export default function ShareCard({ record }: { record: ShareRecord }) {
       <div className="flex items-center justify-between">
         <span className="font-display text-xl leading-none">스도쿠</span>
         <span className="text-[0.68rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-          {record.daily ? `#${dailyNumber(record.dateKey)} · ` : "자유 퍼즐 · "}
+          {record.daily ? `#${dailyNumber(record.dateKey)} · ` : "자유 스도쿠 · "}
           {record.dateKey.replace(/-/g, ".")}
         </span>
       </div>
