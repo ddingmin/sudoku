@@ -50,10 +50,11 @@ export default function Home() {
       dateKey: state.dateKey,
       daily: state.daily,
       finishedAt: Date.now(),
+      seed,
+      moves: getMoves(),
     });
     setStats(s);
-    const full = { ...record, seed, moves: getMoves() };
-    const t = setTimeout(() => setWinRecord(full), 1500);
+    const t = setTimeout(() => setWinRecord(record), 1500);
     return () => clearTimeout(t);
   }, [state?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 

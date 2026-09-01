@@ -1,6 +1,6 @@
 // localStorage 기록 관리: 베스트, 스트릭, 히스토리
 import { Difficulty, todayKey } from "./sudoku";
-import { ShareRecord } from "./encode";
+import { Move, ShareRecord } from "./encode";
 
 const KEY = "sudoku:stats:v1";
 
@@ -12,6 +12,8 @@ export interface GameResult {
   dateKey: string;
   daily: boolean;
   finishedAt: number; // epoch ms
+  seed?: number; // 리플레이용
+  moves?: Move[]; // 리플레이용
 }
 
 export interface Stats {
@@ -95,6 +97,8 @@ export function recordClear(result: GameResult): { stats: Stats; record: ShareRe
       streak: result.daily ? s.streak : 0,
       daily: result.daily,
       best,
+      seed: result.seed,
+      moves: result.moves,
     },
   };
 }

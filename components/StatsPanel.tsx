@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { DIFFICULTIES, DIFFICULTY_LABEL } from "@/lib/sudoku";
 import { Stats, currentStreak } from "@/lib/stats";
@@ -123,10 +124,13 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
                 streak: 0,
                 daily: h.daily,
                 best: stats.bests[h.difficulty] === h.timeSec,
+                seed: h.seed,
+                moves: h.moves,
               };
               return (
-                <li key={i} className="chunky-sm flex items-center justify-between px-4 py-3" style={{ boxShadow: "var(--shadow-sm)" }}>
-                  <div>
+                <li key={i} className="chunky-sm flex items-center justify-between gap-2 px-4 py-3" style={{ boxShadow: "var(--shadow-sm)" }}>
+                  {/* 행 클릭 → 결과 페이지 (리플레이 포함) */}
+                  <Link href={`/share/${encodeRecord(record)}`} className="min-w-0 flex-1">
                     <p className="text-[0.8rem] font-extrabold">
                       {DIFFICULTY_LABEL[h.difficulty]}
                       {record.best && (
@@ -138,10 +142,16 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
                         {h.daily ? "오늘의 스도쿠" : "자유"} · {h.dateKey.replace(/-/g, ".")}
                       </span>
                     </p>
-                    <p className="tabular mt-1 text-[0.72rem] font-bold" style={{ color: "var(--ink-soft)" }}>
+                    <p className="tabular mt-1 flex items-center gap-1 text-[0.72rem] font-bold" style={{ color: "var(--ink-soft)" }}>
                       ⏱ {formatTime(h.timeSec)} · ✕ {h.mistakes} · 💡 {h.hints}
+                      <span className="ml-1 flex items-center gap-0.5 text-[0.66rem]" style={{ color: "var(--primary)" }}>
+                        결과 보기
+                        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                          <path d="m9 18 6-6-6-6" />
+                        </svg>
+                      </span>
                     </p>
-                  </div>
+                  </Link>
                   <button
                     onClick={() => shareHistory(record)}
                     aria-label="이 기록 공유"
