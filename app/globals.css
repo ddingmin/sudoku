@@ -59,50 +59,50 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --ground: #131417;
-    --surface: #1f2126;
-    --surface-dim: #191a1e;
+    --ground: #1e2026;
+    --surface: #292c34;
+    --surface-dim: #23252c;
     --ink: #f2efe6;
     --ink-soft: #b9b6aa;
     --ink-faint: #77746a;
     --primary: #5d7cff;
     --primary-strong: #3d5be8;
     --on-primary: #ffffff;
-    --peer: #232838;
-    --same: #2e3a5f;
+    --peer: #2c3245;
+    --same: #38436b;
     --pop: #c8f04d;
     --on-pop: #141414;
     --danger: #ff5470;
     --danger-wash: #3d1e28;
     --swipe-bg: rgba(200, 240, 77, 0.3);
-    --cell-line: #2b2d34;
+    --cell-line: #35383f;
     --box-line: #8b887c;
     --edge: #edeae0;
-    --shadow-ink: #3d4cb8; /* 딥 인디고 — 차콜 위에서도 보이는 하드 섀도 */
+    --shadow-ink: #0b0c0f; /* 바탕보다 어두운 잉크 — 자연스러운 하드 섀도 */
   }
 }
 
 :root[data-theme="dark"] {
-  --ground: #131417;
-  --surface: #1f2126;
-  --surface-dim: #191a1e;
+  --ground: #1e2026;
+  --surface: #292c34;
+  --surface-dim: #23252c;
   --ink: #f2efe6;
   --ink-soft: #b9b6aa;
   --ink-faint: #77746a;
   --primary: #5d7cff;
   --primary-strong: #3d5be8;
   --on-primary: #ffffff;
-  --peer: #232838;
-  --same: #2e3a5f;
+  --peer: #2c3245;
+  --same: #38436b;
   --pop: #c8f04d;
   --on-pop: #141414;
   --danger: #ff5470;
   --danger-wash: #3d1e28;
   --swipe-bg: rgba(200, 240, 77, 0.3);
-  --cell-line: #2b2d34;
+  --cell-line: #35383f;
   --box-line: #8b887c;
   --edge: #edeae0;
-  --shadow-ink: #3d4cb8; /* 딥 인디고 — 차콜 위에서도 보이는 하드 섀도 */
+  --shadow-ink: #0b0c0f; /* 바탕보다 어두운 잉크 — 자연스러운 하드 섀도 */
 }
 
 html {
