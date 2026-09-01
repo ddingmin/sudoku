@@ -13,6 +13,7 @@ import {
   rowOf,
   todayKey,
 } from "./sudoku";
+import { Move } from "./encode";
 
 export const MAX_HINTS = 3;
 
@@ -72,6 +73,8 @@ export function useGame(initial: { difficulty: Difficulty; daily: boolean }) {
   const [fx, setFx] = useState<FxEvent | null>(null);
   const historyRef = useRef<HistoryEntry[]>([]);
   const fxIdRef = useRef(0);
+  const movesRef = useRef<Move[]>([]); // 풀이 로그 (리캡/리플레이용)
+  const elapsedRef = useRef(0);
   const dateKey = useMemo(() => todayKey(), []);
 
   const emitFx = useCallback((kind: FxEvent["kind"], cells: Map<number, number>) => {
@@ -94,6 +97,8 @@ export function useGame(initial: { difficulty: Difficulty; daily: boolean }) {
       setDaily(isDaily);
       setFx(null);
       historyRef.current = [];
+      movesRef.current = [];
+      elapsedRef.current = 0;
     },
     [],
   );
@@ -108,7 +113,11 @@ export function useGame(initial: { difficulty: Difficulty; daily: boolean }) {
   useEffect(() => {
     if (status !== "playing" || !puzzle) return;
     const t = setInterval(() => {
-      if (!document.hidden) setElapsed((e) => e + 1);
+      if (!document.hidden)
+        setElapsed((e) => {
+          elapsedRef.current = e + 1;
+          return e + 1;
+        });
     }, 1000);
     return () => clearInterval(t);
   }, [status, puzzle]);
@@ -198,9 +207,11 @@ export function useGame(initial: { difficulty: Difficulty; daily: boolean }) {
       });
 
       if (puzzle.solution[selected] === n) {
+        movesRef.current.push({ i: selected, k: 0, t: elapsedRef.current });
         emitFx("pop", new Map([[selected, 0]]));
         checkCompletions(selected, nextValues, puzzle.solution);
       } else {
+        movesRef.current.push({ i: selected, k: 1, t: elapsedRef.current });
         setMistakes((m) => m + 1);
         emitFx("error", new Map([[selected, 0]]));
       }
@@ -267,6 +278,7 @@ export function useGame(initial: { difficulty: Difficulty; daily: boolean }) {
     });
     setSelected(target);
     setHintsUsed((h) => h + 1);
+    movesRef.current.push({ i: target, k: 2, t: elapsedRef.current });
     emitFx("pop", new Map([[target, 0]]));
     checkCompletions(target, nextValues, puzzle.solution);
   }, [puzzle, status, hintsUsed, selected, given, values, notes, emitFx, checkCompletions]);
@@ -293,6 +305,9 @@ export function useGame(initial: { difficulty: Difficulty; daily: boolean }) {
     state,
     fx,
     remaining,
+    puzzleGrid: puzzle?.puzzle ?? null,
+    seed: puzzle?.seed,
+    getMoves: () => movesRef.current,
     select: setSelected,
     input,
     erase,
