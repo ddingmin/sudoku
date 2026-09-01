@@ -78,7 +78,7 @@
     --cell-line: #2b2d34;
     --box-line: #8b887c;
     --edge: #edeae0;
-    --shadow-ink: #000000;
+    --shadow-ink: #3d4cb8; /* 딥 인디고 — 차콜 위에서도 보이는 하드 섀도 */
   }
 }
 
@@ -102,7 +102,7 @@
   --cell-line: #2b2d34;
   --box-line: #8b887c;
   --edge: #edeae0;
-  --shadow-ink: #000000;
+  --shadow-ink: #3d4cb8; /* 딥 인디고 — 차콜 위에서도 보이는 하드 섀도 */
 }
 
 html {
