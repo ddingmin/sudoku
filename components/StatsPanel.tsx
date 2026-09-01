@@ -142,8 +142,28 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
                         {h.daily ? "오늘의 스도쿠" : "자유"} · {h.dateKey.replace(/-/g, ".")}
                       </span>
                     </p>
-                    <p className="tabular mt-1 text-[0.72rem] font-bold" style={{ color: "var(--ink-soft)" }}>
-                      ⏱ {formatTime(h.timeSec)} · ✕ {h.mistakes} · 💡 {h.hints}
+                    <p className="tabular mt-1.5 flex items-center gap-3 text-[0.72rem] font-bold" style={{ color: "var(--ink-soft)" }}>
+                      <span className="flex items-center gap-1" aria-label={`클리어 타임 ${formatTime(h.timeSec)}`}>
+                        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 6v6l4 2" />
+                        </svg>
+                        {formatTime(h.timeSec)}
+                      </span>
+                      <span className="flex items-center gap-1" aria-label={`실수 ${h.mistakes}회`}>
+                        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke={h.mistakes > 0 ? "var(--danger)" : "currentColor"} strokeWidth="3" strokeLinecap="round">
+                          <path d="M18 6 6 18M6 6l12 12" />
+                        </svg>
+                        {h.mistakes}
+                      </span>
+                      <span className="flex items-center gap-1" aria-label={`힌트 ${h.hints}회`}>
+                        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+                          <path d="M9 18h6" />
+                          <path d="M10 22h4" />
+                        </svg>
+                        {h.hints}
+                      </span>
                     </p>
                   </Link>
                   <button
