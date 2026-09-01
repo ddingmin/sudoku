@@ -10,7 +10,12 @@ const bagel = Bagel_Fat_One({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : "http://localhost:3000"),
+  ),
   title: "스도쿠 — 매일 한 판",
   description: "매일 자정 새로운 퍼즐. 기록 세우고, 스토리에 자랑하고, 친구를 도발하세요.",
   openGraph: {
