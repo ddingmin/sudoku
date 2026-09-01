@@ -1,0 +1,292 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════
+   스도쿠 디자인 시스템 — "키치 팝" (A1 하이퍼블루 + 라임)
+   레이어 1: 원시 토큰(색·타이포·반경·섀도)
+   레이어 2: 시맨틱 토큰(역할 기반 — 컴포넌트는 이것만 사용)
+   레이어 3: 컴포넌트 유틸리티(.chunky-*, .sticker)
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  /* ── 색: 바탕과 잉크 ── */
+  --ground: #faf8f3; /* 웜 화이트 바탕 */
+  --surface: #ffffff; /* 카드/셀 표면 */
+  --surface-dim: #f1eee6;
+  --ink: #141414; /* 메인 잉크 — 텍스트/보더/하드섀도 */
+  --ink-soft: #5a574e;
+  --ink-faint: #9b978c;
+
+  /* ── 색: 포인트 ── */
+  --primary: #2b4cff; /* 하이퍼블루 — 사용자 숫자/CTA/뱃지 */
+  --primary-strong: #1e38cc; /* 눌림/패턴 딥톤 */
+  --on-primary: #ffffff;
+  --peer: #eef2ff; /* 같은 행/열/박스 틴트 */
+  --same: #d8e1ff; /* 같은 숫자 틴트 */
+  --pop: #c8f04d; /* 라임 — 선택 셀/형광 하이라이트 */
+  --on-pop: #141414;
+  --danger: #e93a5e; /* 체리 — 오답/신기록 스티커 */
+  --danger-wash: #ffdde4;
+
+  /* ── 색: 라인 ── */
+  --cell-line: #ece9e0; /* 셀 헤어라인 */
+  --box-line: #141414; /* 3x3 박스 구분선 */
+  --edge: #141414; /* 청키 보더 */
+  --shadow-ink: #141414; /* 하드 섀도 잉크 */
+
+  /* ── 하드 섀도(키치 팝 시그니처) ── */
+  --shadow-sm: 2px 2px 0 var(--shadow-ink);
+  --shadow-md: 3px 3px 0 var(--shadow-ink);
+  --shadow-lg: 6px 6px 0 var(--shadow-ink);
+  --shadow-xl: 8px 8px 0 var(--shadow-ink);
+
+  /* ── 반경 ── */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-xl: 22px;
+
+  /* ── 타이포 ── */
+  --font-display: var(--font-bagel), "Bagel Fat One", "Pretendard Variable", sans-serif;
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo",
+    "Noto Sans KR", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #15141a;
+    --surface: #211f28;
+    --surface-dim: #1a1921;
+    --ink: #f4f2ea;
+    --ink-soft: #b4b0a4;
+    --ink-faint: #726e64;
+    --primary: #8ca0ff;
+    --primary-strong: #6e86ff;
+    --on-primary: #10101c;
+    --peer: #232637;
+    --same: #2c3352;
+    --pop: #c8f04d;
+    --on-pop: #141414;
+    --danger: #ff5c7e;
+    --danger-wash: #3a2028;
+    --cell-line: #2e2c36;
+    --box-line: #565360;
+    --edge: #3e3b47;
+    --shadow-ink: #000000;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #15141a;
+  --surface: #211f28;
+  --surface-dim: #1a1921;
+  --ink: #f4f2ea;
+  --ink-soft: #b4b0a4;
+  --ink-faint: #726e64;
+  --primary: #8ca0ff;
+  --primary-strong: #6e86ff;
+  --on-primary: #10101c;
+  --peer: #232637;
+  --same: #2c3352;
+  --pop: #c8f04d;
+  --on-pop: #141414;
+  --danger: #ff5c7e;
+  --danger-wash: #3a2028;
+  --cell-line: #2e2c36;
+  --box-line: #565360;
+  --edge: #3e3b47;
+  --shadow-ink: #000000;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* ── 레이어 3: 컴포넌트 유틸리티 ── */
+
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+/* 청키 카드/버튼: 두꺼운 보더 + 하드 섀도 */
+.chunky {
+  background: var(--surface);
+  border: 2px solid var(--edge);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+}
+
+.chunky-sm {
+  background: var(--surface);
+  border: 2px solid var(--edge);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.chunky-press {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.chunky-press:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--shadow-ink);
+}
+
+/* 스티커: 회전된 작은 뱃지 */
+.sticker {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 5px 9px;
+  border-radius: 9px;
+  border: 2px solid var(--edge);
+  box-shadow: var(--shadow-sm);
+  line-height: 1;
+}
+
+/* 형광펜 스와이프(제목 밑 라임 하이라이트) */
+.swipe {
+  position: relative;
+  display: inline-flex;
+}
+.swipe::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -6px;
+  top: 45%;
+  bottom: 4%;
+  background: var(--pop);
+  border-radius: 6px;
+  transform: rotate(-2deg);
+}
+.swipe > * {
+  position: relative;
+}
+
+/* 체커보드 스트립(브랜드 모티프) */
+.checker {
+  background: repeating-conic-gradient(var(--ink) 0% 25%, transparent 0% 50%);
+  background-size: 8px 8px;
+  border-radius: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 셀 애니메이션 ── */
+@keyframes cell-pop {
+  0% {
+    transform: scale(0.3) rotate(-8deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.22) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes cell-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-3px);
+  }
+  40% {
+    transform: translateX(3px);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+/* 완성 물결 — 블루 플래시 */
+@keyframes unit-ripple {
+  0% {
+    background-color: var(--same);
+    box-shadow: inset 0 0 0 2px var(--primary);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+}
+
+/* 클리어 웨이브 — 라임 펄스 */
+@keyframes clear-wave {
+  0% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+  40% {
+    background-color: color-mix(in srgb, var(--pop) 55%, transparent);
+    transform: scale(0.9);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+@keyframes error-pulse {
+  0% {
+    background-color: var(--danger-wash);
+  }
+  50% {
+    background-color: color-mix(in srgb, var(--danger) 32%, transparent);
+  }
+  100% {
+    background-color: var(--danger-wash);
+  }
+}
+
+.anim-pop {
+  animation: cell-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.anim-shake {
+  animation: cell-shake 0.32s ease-in-out;
+}
+.anim-ripple {
+  animation: unit-ripple 0.7s ease-out both;
+}
+.anim-clear {
+  animation: clear-wave 0.8s ease-in-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-pop,
+  .anim-shake,
+  .anim-ripple,
+  .anim-clear {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button {
+  touch-action: manipulation;
+}
