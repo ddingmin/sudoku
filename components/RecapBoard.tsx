@@ -31,13 +31,12 @@ export default function RecapBoard({ puzzle, moves, size = 200, autoPlay = true 
   };
 
   useEffect(() => {
-    if (autoPlay) {
-      const t = setTimeout(play, 500);
-      return () => {
-        clearTimeout(t);
-        if (timerRef.current) clearInterval(timerRef.current);
-      };
-    }
+    const t = autoPlay ? setTimeout(play, 500) : null;
+    return () => {
+      // 자동 재생 여부와 무관하게 재생 중 인터벌을 항상 정리
+      if (t) clearTimeout(t);
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

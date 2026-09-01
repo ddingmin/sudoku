@@ -27,7 +27,7 @@ const H = 1920;
 const FPS = 30;
 const INTRO = 0.6; // 타이틀 팝인
 const REPLAY = 4.6; // 타임랩스 구간
-const OUTRO = 2.2; // 엔드 카드
+const OUTRO = 2.6; // 엔드 카드 (결과 시간을 충분히 보여줌)
 const TOTAL = INTRO + REPLAY + OUTRO;
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -123,6 +123,11 @@ function renderFrame(ctx: CanvasRenderingContext2D, t: number, d: FrameData) {
   chunkyRect(ctx, bx, by, bs, bs, 40, C.surface, 14, 7);
   const cell = bs / 9;
 
+  // 모서리 셀이 라운드를 침범하지 않도록 카드 내부로 클리핑
+  ctx.save();
+  roundRect(ctx, bx + 3, by + 3, bs - 6, bs - 6, 34);
+  ctx.clip();
+
   // 현재 시점의 셀 상태
   const state = new Array<number>(81).fill(0); // 0 없음 1 정답 2 힌트 3 오답
   const appearP = new Array<number>(81).fill(1);
@@ -189,25 +194,32 @@ function renderFrame(ctx: CanvasRenderingContext2D, t: number, d: FrameData) {
     ctx.lineTo(bx + bs - 4, by + k * cell);
     ctx.stroke();
   }
+  ctx.restore(); // 보드 클리핑 + 보드 안에서 바꾼 텍스트 상태 원복
 
-  // 타이머 (리플레이 진행에 비례해 카운트업)
+  // 타이머 (리플레이 진행에 비례해 카운트업, 아웃트로부터는 최종 기록 고정)
   const replayP = Math.max(0, Math.min(1, (t - INTRO) / REPLAY));
-  const shownSec = Math.round(replayP * record.timeSec);
+  const inOutro = t >= INTRO + REPLAY;
+  const shownSec = inOutro ? record.timeSec : Math.round(replayP * record.timeSec);
   const outroP = pop(Math.max(0, Math.min(1, (t - INTRO - REPLAY) / 0.35)));
   const timerY = 1560;
+  const timeStr = formatTime(shownSec);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `400 170px ${DISPLAY}`;
   if (outroP > 0) {
+    // 라임 스와이프: 실제 시간 텍스트 폭에 맞춰 크기 결정
+    const tw = ctx.measureText(formatTime(record.timeSec)).width;
     ctx.save();
-    ctx.translate(W / 2, timerY - 55);
+    ctx.translate(W / 2, timerY);
     ctx.rotate(-0.02);
     ctx.scale(Math.max(0.001, outroP), Math.max(0.001, outroP));
     ctx.fillStyle = C.pop;
-    roundRect(ctx, -320, -70, 640, 150, 26);
+    roundRect(ctx, -tw / 2 - 36, -122, tw + 72, 158, 26);
     ctx.fill();
     ctx.restore();
   }
   ctx.fillStyle = outroP > 0 ? C.primary : C.surface;
-  ctx.font = `400 170px ${DISPLAY}`;
-  ctx.fillText(formatTime(shownSec), W / 2, timerY);
+  ctx.fillText(timeStr, W / 2, timerY);
 
   // 스탯 라인 + 엔드 카피
   ctx.fillStyle = "rgba(255,255,255,0.85)";
@@ -215,7 +227,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, t: number, d: FrameData) {
   ctx.fillText(`실수 ${record.mistakes} · 힌트 ${record.hints}${record.streak > 1 ? ` · ${record.streak}일 연속` : ""}`, W / 2, 1660);
 
   if (outroP > 0) {
-    ctx.globalAlpha = Math.min(1, outroP);
+    ctx.globalAlpha = Math.max(0, Math.min(1, outroP));
     ctx.fillStyle = C.pop;
     ctx.font = `800 52px ${SANS}`;
     ctx.fillText("이 기록, 깰 수 있어?", W / 2, 1755);
@@ -271,16 +283,25 @@ async function renderWithWebCodecs(d: FrameData, onProgress?: (p: number) => voi
 
   const frames = Math.ceil(TOTAL * FPS);
   const usec = 1_000_000 / FPS;
+  const deadline = performance.now() + 60_000; // 인코더가 멈추면 폴백으로 넘어가도록 상한
   for (let i = 0; i < frames; i++) {
     if (failed) throw failed;
     renderFrame(ctx, i / FPS, d);
     const frame = new VideoFrame(canvas, { timestamp: Math.round(i * usec), duration: Math.round(usec) });
     encoder.encode(frame, { keyFrame: i % 60 === 0 });
     frame.close();
-    while (encoder.encodeQueueSize > 4) await new Promise((r) => setTimeout(r, 4));
+    while (encoder.encodeQueueSize > 4) {
+      if (failed) throw failed;
+      if (performance.now() > deadline) throw new Error("encode timeout");
+      await new Promise((r) => setTimeout(r, 4));
+    }
     onProgress?.(i / frames);
   }
-  await encoder.flush();
+  await Promise.race([
+    encoder.flush(),
+    new Promise((_, rej) => setTimeout(() => rej(new Error("flush timeout")), 20_000)),
+  ]);
+  if (failed) throw failed;
   muxer.finalize();
   onProgress?.(1);
   return new Blob([muxer.target.buffer], { type: "video/mp4" });
@@ -326,19 +347,35 @@ async function renderWithRecorder(d: FrameData, onProgress?: (p: number) => void
   });
 }
 
+// 같은 기록은 한 번만 인코딩 (여러 번 공유해도 재사용)
+let videoCache: { key: string; blob: Blob } | null = null;
+
+function cacheKey(record: ShareRecord): string {
+  return `${record.difficulty}:${record.dateKey}:${record.seed}:${record.timeSec}:${record.moves?.length}:${record.mistakes}:${record.hints}:${record.streak}:${record.best}`;
+}
+
 export async function renderShareVideo(record: ShareRecord, onProgress?: (p: number) => void): Promise<Blob | null> {
   if (!record.moves || record.moves.length === 0 || record.seed === undefined) return null;
+  const key = cacheKey(record);
+  if (videoCache?.key === key) {
+    onProgress?.(1);
+    return videoCache.blob;
+  }
   await ensureFonts();
   const d = prepare(record);
+  let blob: Blob | null = null;
   try {
-    const mp4 = await renderWithWebCodecs(d, onProgress);
-    if (mp4) return mp4;
+    blob = await renderWithWebCodecs(d, onProgress);
   } catch {}
-  try {
-    return await renderWithRecorder(d, onProgress);
-  } catch {
-    return null;
+  if (!blob) {
+    try {
+      blob = await renderWithRecorder(d, onProgress);
+    } catch {
+      return null;
+    }
   }
+  if (blob) videoCache = { key, blob };
+  return blob;
 }
 
 // 영상 공유: 네이티브 공유 시트(스토리/릴스 선택 가능) → 다운로드 폴백

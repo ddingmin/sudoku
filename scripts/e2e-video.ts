@@ -45,7 +45,7 @@ async function main() {
   const frame = await ctx.newPage();
   await frame.setViewportSize({ width: 540, height: 960 });
   await frame.setContent(`<body style="margin:0;background:#000"><video id="v" width="540" height="960" muted src="data:${mime};base64,${b64}"></video></body>`);
-  for (const t of [1.2, 3.5, 6.9]) {
+  for (const t of [0.7, 3.5, 5.05, 7.2]) {
     await frame.evaluate(async (time) => {
       const v = document.getElementById("v") as HTMLVideoElement;
       await new Promise<void>((res) => {
@@ -57,6 +57,13 @@ async function main() {
     await frame.screenshot({ path: `${OUT}/video-frame-${t}.png` });
     console.log(`frame @${t}s captured`);
   }
+
+  // 캐시 확인: 두 번째 공유는 재인코딩 없이 즉시 완료되어야 함
+  const t0 = Date.now();
+  const dl2 = page.waitForEvent("download", { timeout: 15000 });
+  await page.getByRole("button", { name: /영상으로 자랑하기/ }).click();
+  await dl2;
+  console.log("2번째 공유(캐시):", Date.now() - t0, "ms");
 
   await browser.close();
   console.log("E2E VIDEO DONE");
