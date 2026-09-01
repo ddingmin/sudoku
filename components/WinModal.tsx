@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { ShareRecord, encodeRecord, shareText } from "@/lib/encode";
 import { downloadShareImage, shareImageFile } from "@/lib/shareImage";
+import { shareVideo } from "@/lib/shareVideo";
 import { highlightLines } from "@/lib/recap";
 import ShareCard from "./ShareCard";
 import RecapBoard from "./RecapBoard";
@@ -32,6 +33,7 @@ function fireConfetti() {
 export default function WinModal({ record, puzzle, onNewGame, onClose }: WinModalProps) {
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [videoProgress, setVideoProgress] = useState<number | null>(null);
 
   useEffect(() => {
     const t = setTimeout(fireConfetti, 350);
@@ -74,6 +76,22 @@ export default function WinModal({ record, puzzle, onNewGame, onClose }: WinModa
       showToast("공유에 실패했어요");
     } finally {
       setBusy(false);
+    }
+  };
+
+  // 릴스/스토리용 리캡 영상 → 공유 시트, 실패 시 이미지 공유로 폴백
+  const shareReels = async () => {
+    setBusy(true);
+    setVideoProgress(0);
+    try {
+      const result = await shareVideo(record, shareText(record, shareUrl()), setVideoProgress);
+      if (result === "downloaded") showToast("영상을 저장했어요 — 릴스/스토리에 올려보세요");
+      else if (result === null) await shareStory();
+    } catch {
+      showToast("영상 생성에 실패했어요");
+    } finally {
+      setBusy(false);
+      setVideoProgress(null);
     }
   };
 
@@ -164,17 +182,31 @@ export default function WinModal({ record, puzzle, onNewGame, onClose }: WinModa
         {/* 공유 버튼들 */}
         <div className="mt-4 flex flex-col gap-2.5">
           <button
-            onClick={shareStory}
+            onClick={record.moves && record.moves.length > 0 && record.seed !== undefined ? shareReels : shareStory}
             disabled={busy}
             className="chunky chunky-press flex items-center justify-center gap-2 py-3.5 text-[0.95rem] font-extrabold disabled:opacity-60"
             style={{ background: "var(--pop)", color: "var(--on-pop)", boxShadow: "var(--shadow-md)" }}
           >
-            <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-              <path d="m16 6-4-4-4 4" />
-              <path d="M12 2v13" />
-            </svg>
-            스토리에 자랑하기
+            {videoProgress !== null ? (
+              <>영상 만드는 중 · {Math.round(videoProgress * 100)}%</>
+            ) : record.moves && record.moves.length > 0 && record.seed !== undefined ? (
+              <>
+                <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m10 8 6 4-6 4V8Z" />
+                  <rect x="2" y="4" width="20" height="16" rx="3" />
+                </svg>
+                영상으로 자랑하기
+              </>
+            ) : (
+              <>
+                <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <path d="m16 6-4-4-4 4" />
+                  <path d="M12 2v13" />
+                </svg>
+                스토리에 자랑하기
+              </>
+            )}
           </button>
           <div className="flex gap-2.5">
             <button
