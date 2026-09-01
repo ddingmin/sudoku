@@ -16,7 +16,7 @@ import { Emblem } from "@/components/ShareCard";
 
 export default function Home() {
   const game = useGame({ difficulty: "normal", daily: true });
-  const { state, fx, remaining, select, input, erase, undo, hint, toggleNoteMode, newGame } = game;
+  const { state, fx, remaining, puzzleGrid, seed, getMoves, select, input, erase, undo, hint, toggleNoteMode, newGame } = game;
 
   const [winRecord, setWinRecord] = useState<ShareRecord | null>(null);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -52,7 +52,8 @@ export default function Home() {
       finishedAt: Date.now(),
     });
     setStats(s);
-    const t = setTimeout(() => setWinRecord(record), 1500);
+    const full = { ...record, seed, moves: getMoves() };
+    const t = setTimeout(() => setWinRecord(full), 1500);
     return () => clearTimeout(t);
   }, [state?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -160,6 +161,7 @@ export default function Home() {
         {winRecord && (
           <WinModal
             record={winRecord}
+            puzzle={puzzleGrid}
             onNewGame={() => startNewGame(state!.difficulty, false)}
             onClose={() => setWinRecord(null)}
           />

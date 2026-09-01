@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { decodeRecord, formatTime } from "@/lib/encode";
 import { DIFFICULTY_LABEL, dailyNumber } from "@/lib/sudoku";
 import ShareCard, { Emblem } from "@/components/ShareCard";
+import ShareRecap from "@/components/ShareRecap";
 
 interface Props {
   params: Promise<{ code: string }>;
@@ -51,6 +52,8 @@ export default async function SharePage({ params }: Props) {
           친구가 오늘 퍼즐을 이렇게 깼어요
         </p>
       </div>
+
+      {record.moves && record.seed !== undefined && <ShareRecap record={record} />}
 
       <ShareCard record={record} />
 
