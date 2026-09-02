@@ -15,7 +15,10 @@ import StatsPanel from "@/components/StatsPanel";
 import { Emblem } from "@/components/ShareCard";
 
 export default function Home() {
-  const game = useGame({ difficulty: "normal", daily: true });
+  const game = useGame({ difficulty: "normal", daily: true }, (fresh) => {
+    // 새 게임만 플레이 수에 집계 (복원된 게임은 제외)
+    setStats(fresh ? recordStart() : loadStats());
+  });
   const { state, fx, remaining, puzzleGrid, seed, getMoves, select, input, erase, undo, hint, toggleNoteMode, newGame } = game;
 
   const [winRecord, setWinRecord] = useState<ShareRecord | null>(null);
@@ -23,17 +26,11 @@ export default function Home() {
   const [stats, setStats] = useState<Stats | null>(null);
   const recordedRef = useRef(false);
 
-  // 게임 시작 기록
-  useEffect(() => {
-    setStats(recordStart());
-  }, []);
-
   const startNewGame = useCallback(
     (diff: Difficulty, daily: boolean) => {
       newGame(diff, daily);
       setWinRecord(null);
       recordedRef.current = false;
-      setStats(recordStart());
     },
     [newGame],
   );

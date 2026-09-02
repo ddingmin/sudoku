@@ -58,7 +58,67 @@ function unitCells(kind: "row" | "col" | "box", n: number): number[] {
   return out;
 }
 
-export function useGame(initial: { difficulty: Difficulty; daily: boolean }) {
+// ── 진행 상태 저장/복원 ──
+// 모바일에서 앱 전환 시 브라우저가 탭을 내리면 페이지가 재로드되어
+// 진행이 초기화되는 문제를 막는다. 게임별 슬롯에 저장하고 로드 시 복원.
+interface SavedGame {
+  seed: number;
+  difficulty: Difficulty;
+  daily: boolean;
+  dateKey: string;
+  values: number[];
+  notes: number[];
+  mistakes: number;
+  hintsUsed: number;
+  elapsed: number;
+  noteMode: boolean;
+  moves: Move[];
+  savedAt: number;
+}
+
+const SAVES_KEY = "sudoku:games:v1";
+const CURRENT_KEY = "sudoku:current:v1";
+
+function gameKey(daily: boolean, difficulty: Difficulty, dateKey: string, seed: number): string {
+  return daily ? `d:${difficulty}:${dateKey}` : `f:${seed}`;
+}
+
+function loadSaves(): Record<string, SavedGame> {
+  try {
+    return JSON.parse(localStorage.getItem(SAVES_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function writeSaves(saves: Record<string, SavedGame>) {
+  try {
+    // 3일 지난 슬롯 제거, 최근 10개만 유지
+    const entries = Object.entries(saves)
+      .filter(([, s]) => Date.now() - s.savedAt < 3 * 86400_000)
+      .sort((a, b) => b[1].savedAt - a[1].savedAt)
+      .slice(0, 10);
+    localStorage.setItem(SAVES_KEY, JSON.stringify(Object.fromEntries(entries)));
+  } catch {}
+}
+
+function setCurrentKey(key: string | null) {
+  try {
+    if (key) localStorage.setItem(CURRENT_KEY, key);
+    else localStorage.removeItem(CURRENT_KEY);
+  } catch {}
+}
+
+function isSaveValid(s: SavedGame | undefined): s is SavedGame {
+  if (!s || !Array.isArray(s.values) || s.values.length !== 81) return false;
+  if (s.daily && s.dateKey !== todayKey()) return false; // 지난 데일리는 폐기
+  return true;
+}
+
+export function useGame(
+  initial: { difficulty: Difficulty; daily: boolean },
+  onStart?: (fresh: boolean) => void,
+) {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [values, setValues] = useState<number[]>([]);
   const [notes, setNotes] = useState<number[]>([]);
@@ -70,19 +130,55 @@ export function useGame(initial: { difficulty: Difficulty; daily: boolean }) {
   const [noteMode, setNoteMode] = useState(false);
   const [daily, setDaily] = useState(initial.daily);
   const [difficulty, setDifficulty] = useState(initial.difficulty);
+  const [dateKey, setDateKey] = useState(() => todayKey());
   const [fx, setFx] = useState<FxEvent | null>(null);
   const historyRef = useRef<HistoryEntry[]>([]);
   const fxIdRef = useRef(0);
   const movesRef = useRef<Move[]>([]); // 풀이 로그 (리캡/리플레이용)
   const elapsedRef = useRef(0);
-  const dateKey = useMemo(() => todayKey(), []);
+  const currentKeyRef = useRef<string | null>(null);
+  const onStartRef = useRef(onStart);
+  onStartRef.current = onStart;
 
   const emitFx = useCallback((kind: FxEvent["kind"], cells: Map<number, number>) => {
     setFx({ id: ++fxIdRef.current, kind, cells });
   }, []);
 
+  // 저장된 게임 복원
+  const applySave = useCallback((saved: SavedGame) => {
+    const p = generatePuzzle(saved.difficulty, saved.seed);
+    setPuzzle(p);
+    setValues([...saved.values]);
+    setNotes([...saved.notes]);
+    setSelected(null);
+    setMistakes(saved.mistakes);
+    setHintsUsed(saved.hintsUsed);
+    setStatus("playing");
+    setElapsed(saved.elapsed);
+    setNoteMode(saved.noteMode);
+    setDifficulty(saved.difficulty);
+    setDaily(saved.daily);
+    setDateKey(saved.dateKey);
+    setFx(null);
+    historyRef.current = [];
+    movesRef.current = [...saved.moves];
+    elapsedRef.current = saved.elapsed;
+    currentKeyRef.current = gameKey(saved.daily, saved.difficulty, saved.dateKey, saved.seed);
+    setCurrentKey(currentKeyRef.current);
+    onStartRef.current?.(false);
+  }, []);
+
   const newGame = useCallback(
     (diff: Difficulty, isDaily: boolean) => {
+      const today = todayKey();
+      // 오늘의 스도쿠는 진행 중이던 판이 있으면 이어서
+      if (isDaily) {
+        const saved = loadSaves()[gameKey(true, diff, today, 0)];
+        if (isSaveValid(saved)) {
+          applySave(saved);
+          return;
+        }
+      }
       const p = isDaily ? generateDaily(diff) : generatePuzzle(diff, Math.floor(Math.random() * 2 ** 31));
       setPuzzle(p);
       setValues([...p.puzzle]);
@@ -95,19 +191,80 @@ export function useGame(initial: { difficulty: Difficulty; daily: boolean }) {
       setNoteMode(false);
       setDifficulty(diff);
       setDaily(isDaily);
+      setDateKey(today);
       setFx(null);
       historyRef.current = [];
       movesRef.current = [];
       elapsedRef.current = 0;
+      currentKeyRef.current = gameKey(isDaily, diff, today, p.seed);
+      setCurrentKey(currentKeyRef.current);
+      onStartRef.current?.(true);
     },
-    [],
+    [applySave],
   );
 
-  // 초기 퍼즐 생성 (클라이언트에서만 — SSR 불일치 방지)
+  // 초기 퍼즐: 진행 중이던 게임이 있으면 복원, 없으면 새 게임 (클라이언트 전용)
   useEffect(() => {
+    try {
+      const cur = localStorage.getItem(CURRENT_KEY);
+      const saved = cur ? loadSaves()[cur] : undefined;
+      if (isSaveValid(saved)) {
+        applySave(saved);
+        return;
+      }
+    } catch {}
     newGame(initial.difficulty, initial.daily);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 진행 상태 저장: 상태 변경 시 + 앱 전환/이탈 시
+  const persistRef = useRef<() => void>(() => {});
+  persistRef.current = () => {
+    if (!puzzle || status !== "playing" || !currentKeyRef.current) return;
+    const saves = loadSaves();
+    saves[currentKeyRef.current] = {
+      seed: puzzle.seed,
+      difficulty,
+      daily,
+      dateKey,
+      values,
+      notes,
+      mistakes,
+      hintsUsed,
+      elapsed: elapsedRef.current,
+      noteMode,
+      moves: movesRef.current,
+      savedAt: Date.now(),
+    };
+    writeSaves(saves);
+  };
+
+  useEffect(() => {
+    persistRef.current();
+  }, [values, notes, mistakes, hintsUsed, noteMode, puzzle, status]);
+
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden") persistRef.current();
+    };
+    const onPageHide = () => persistRef.current();
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  }, []);
+
+  // 클리어하면 저장 슬롯 정리
+  useEffect(() => {
+    if (status !== "won" || !currentKeyRef.current) return;
+    const saves = loadSaves();
+    delete saves[currentKeyRef.current];
+    writeSaves(saves);
+    setCurrentKey(null);
+    currentKeyRef.current = null;
+  }, [status]);
 
   // 타이머 (탭이 보일 때만)
   useEffect(() => {
