@@ -59,50 +59,50 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --ground: #1e2026;
-    --surface: #292c34;
-    --surface-dim: #23252c;
+    --ground: #14151a;
+    --surface: #1f2127;
+    --surface-dim: #191a1f;
     --ink: #f2efe6;
     --ink-soft: #b9b6aa;
     --ink-faint: #77746a;
     --primary: #5d7cff;
     --primary-strong: #3d5be8;
     --on-primary: #ffffff;
-    --peer: #2c3245;
-    --same: #38436b;
+    --peer: #262b3d;
+    --same: #303a5f;
     --pop: #c8f04d;
     --on-pop: #141414;
     --danger: #ff5470;
     --danger-wash: #3d1e28;
     --swipe-bg: rgba(200, 240, 77, 0.3);
-    --cell-line: #35383f;
+    --cell-line: #2c2e35;
     --box-line: #8b887c;
     --edge: #edeae0;
-    --shadow-ink: #0b0c0f; /* 바탕보다 어두운 잉크 — 자연스러운 하드 섀도 */
+    --shadow-ink: #8b887c; /* 딤 아이보리 — 다크에선 밝은 하드 섀도(프린트 오프셋 룩) */
   }
 }
 
 :root[data-theme="dark"] {
-  --ground: #1e2026;
-  --surface: #292c34;
-  --surface-dim: #23252c;
+  --ground: #14151a;
+  --surface: #1f2127;
+  --surface-dim: #191a1f;
   --ink: #f2efe6;
   --ink-soft: #b9b6aa;
   --ink-faint: #77746a;
   --primary: #5d7cff;
   --primary-strong: #3d5be8;
   --on-primary: #ffffff;
-  --peer: #2c3245;
-  --same: #38436b;
+  --peer: #262b3d;
+  --same: #303a5f;
   --pop: #c8f04d;
   --on-pop: #141414;
   --danger: #ff5470;
   --danger-wash: #3d1e28;
   --swipe-bg: rgba(200, 240, 77, 0.3);
-  --cell-line: #35383f;
+  --cell-line: #2c2e35;
   --box-line: #8b887c;
   --edge: #edeae0;
-  --shadow-ink: #0b0c0f; /* 바탕보다 어두운 잉크 — 자연스러운 하드 섀도 */
+  --shadow-ink: #8b887c; /* 딤 아이보리 — 다크에선 밝은 하드 섀도(프린트 오프셋 룩) */
 }
 
 html {
