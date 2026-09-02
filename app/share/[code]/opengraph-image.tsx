@@ -4,14 +4,13 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { decodeRecord, formatTime } from "@/lib/encode";
 import { DIFFICULTY_LABEL, dailyNumber } from "@/lib/sudoku";
+import { DIFF_THEME } from "@/lib/palette";
 
 export const alt = "스도쿠 — 클리어 기록";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const C = {
-  primary: "#2b4cff",
-  primaryStrong: "#1e38cc",
   surface: "#ffffff",
   ground: "#faf8f3",
   ink: "#141414",
@@ -72,7 +71,7 @@ export default async function OgImage({ params }: { params: Promise<{ code: stri
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: C.primary,
+            background: DIFF_THEME.normal.primary,
             fontFamily: "Bagel Fat One",
             fontSize: 64,
             color: C.surface,
@@ -85,6 +84,7 @@ export default async function OgImage({ params }: { params: Promise<{ code: stri
     );
   }
 
+  const T = DIFF_THEME[record.difficulty];
   return new ImageResponse(
     (
       <div
@@ -95,17 +95,17 @@ export default async function OgImage({ params }: { params: Promise<{ code: stri
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: C.primary,
+          background: T.primary,
           fontFamily: "Pretendard",
           position: "relative",
         }}
       >
         {/* 상하단 체커 */}
         <div style={{ position: "absolute", top: 0, left: 0, display: "flex", opacity: 0.55 }}>
-          <Checker cells={38} cellSize={32} color={C.primaryStrong} />
+          <Checker cells={38} cellSize={32} color={T.strong} />
         </div>
         <div style={{ position: "absolute", bottom: 0, left: 0, display: "flex", opacity: 0.55 }}>
-          <Checker cells={38} cellSize={32} color={C.primaryStrong} />
+          <Checker cells={38} cellSize={32} color={T.strong} />
         </div>
 
         {/* 카드 */}
@@ -197,7 +197,7 @@ export default async function OgImage({ params }: { params: Promise<{ code: stri
                   fontFamily: "Bagel Fat One",
                   fontSize: 150,
                   lineHeight: 1.15,
-                  color: C.primary,
+                  color: T.primary,
                 }}
               >
                 {formatTime(record.timeSec)}
@@ -236,7 +236,7 @@ export default async function OgImage({ params }: { params: Promise<{ code: stri
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: C.primary,
+                background: T.primary,
                 border: `3px solid ${C.ink}`,
                 borderRadius: 14,
               }}

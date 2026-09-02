@@ -6,10 +6,9 @@
 import { Muxer, ArrayBufferTarget } from "mp4-muxer";
 import { Move, ShareRecord, formatTime } from "./encode";
 import { DIFFICULTY_LABEL, dailyNumber, generatePuzzle } from "./sudoku";
+import { DIFF_THEME, DiffTheme } from "./palette";
 
 const C = {
-  primary: "#2b4cff",
-  primaryStrong: "#1e38cc",
   surface: "#ffffff",
   ground: "#faf8f3",
   ink: "#141414",
@@ -68,6 +67,7 @@ function pop(p: number): number {
 
 interface FrameData {
   record: ShareRecord;
+  theme: DiffTheme;
   puzzle: number[];
   solution: number[];
   moves: Move[];
@@ -79,18 +79,18 @@ function prepare(record: ShareRecord): FrameData {
   const moves = record.moves!;
   const n = moves.length;
   const moveAt = moves.map((_, i) => INTRO + (n <= 1 ? 0 : (i / (n - 1)) * (REPLAY - 0.3)));
-  return { record, puzzle, solution, moves, moveAt };
+  return { record, theme: DIFF_THEME[record.difficulty], puzzle, solution, moves, moveAt };
 }
 
 function renderFrame(ctx: CanvasRenderingContext2D, t: number, d: FrameData) {
-  const { record, puzzle, solution, moves, moveAt } = d;
+  const { record, theme, puzzle, solution, moves, moveAt } = d;
 
   // 바탕
-  ctx.fillStyle = C.primary;
+  ctx.fillStyle = theme.primary;
   ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = 0.5;
-  checker(ctx, 0, 120, 60, C.primaryStrong);
-  checker(ctx, H - 120, 120, 60, C.primaryStrong);
+  checker(ctx, 0, 120, 60, theme.strong);
+  checker(ctx, H - 120, 120, 60, theme.strong);
   ctx.globalAlpha = 1;
 
   // 타이틀
@@ -153,7 +153,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, t: number, d: FrameData) {
       ctx.fillText(String(puzzle[i]), cxm, cym + 4);
     } else if (state[i] > 0) {
       const p = pop(appearP[i]);
-      const bg = state[i] === 1 ? C.peer : state[i] === 2 ? C.pop : "#ffdde4";
+      const bg = state[i] === 1 ? theme.peer : state[i] === 2 ? C.pop : "#ffdde4";
       ctx.save();
       ctx.translate(cxm, cym);
       ctx.scale(p, p);
@@ -171,7 +171,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, t: number, d: FrameData) {
         ctx.lineTo(-14, 14);
         ctx.stroke();
       } else {
-        ctx.fillStyle = state[i] === 2 ? C.ink : C.primary;
+        ctx.fillStyle = state[i] === 2 ? C.ink : theme.primary;
         ctx.font = `800 54px ${SANS}`;
         ctx.textBaseline = "middle";
         ctx.fillText(String(solution[i]), 0, 4);
@@ -218,7 +218,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, t: number, d: FrameData) {
     ctx.fill();
     ctx.restore();
   }
-  ctx.fillStyle = outroP > 0 ? C.primary : C.surface;
+  ctx.fillStyle = outroP > 0 ? theme.primary : C.surface;
   ctx.fillText(timeStr, W / 2, timerY);
 
   // 스탯 라인 + 엔드 카피

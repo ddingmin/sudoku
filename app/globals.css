@@ -67,7 +67,7 @@
     --ink-faint: #77746a;
     --primary: #5d7cff;
     --primary-strong: #3d5be8;
-    --on-primary: #ffffff;
+    --on-primary: #14151a;
     --peer: #262b3d;
     --same: #303a5f;
     --pop: #c8f04d;
@@ -91,7 +91,7 @@
   --ink-faint: #77746a;
   --primary: #5d7cff;
   --primary-strong: #3d5be8;
-  --on-primary: #ffffff;
+  --on-primary: #14151a;
   --peer: #262b3d;
   --same: #303a5f;
   --pop: #c8f04d;
@@ -103,6 +103,67 @@
   --box-line: #8b887c;
   --edge: #edeae0;
   --shadow-ink: #8b887c; /* 딤 아이보리 — 다크에선 밝은 하드 섀도(프린트 오프셋 룩) */
+}
+
+/* ── 난이도별 키 컬러 (라임·체리는 브랜드 앵커로 고정) ──
+   normal은 기본 토큰 그대로. 컨테이너의 data-difficulty가 하위 트리를 테마화한다. */
+[data-difficulty="easy"] {
+  --primary: #00a356;
+  --primary-strong: #008144;
+  --peer: #e7f6ec;
+  --same: #c6ebd5;
+}
+[data-difficulty="hard"] {
+  --primary: #7a3bff;
+  --primary-strong: #5f2bcc;
+  --peer: #f1ebff;
+  --same: #e4d6ff;
+}
+[data-difficulty="expert"] {
+  --primary: #ff5c00;
+  --primary-strong: #cc4900;
+  --peer: #fff1e6;
+  --same: #ffdfc7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-difficulty="easy"] {
+    --primary: #3fce8c;
+    --primary-strong: #2aa96e;
+    --peer: #1f2f28;
+    --same: #28453a;
+  }
+  :root:not([data-theme="light"]) [data-difficulty="hard"] {
+    --primary: #a18bff;
+    --primary-strong: #8266e8;
+    --peer: #2b2740;
+    --same: #3d3363;
+  }
+  :root:not([data-theme="light"]) [data-difficulty="expert"] {
+    --primary: #ff8a47;
+    --primary-strong: #e8681f;
+    --peer: #33291f;
+    --same: #4f3a28;
+  }
+}
+
+:root[data-theme="dark"] [data-difficulty="easy"] {
+  --primary: #3fce8c;
+  --primary-strong: #2aa96e;
+  --peer: #1f2f28;
+  --same: #28453a;
+}
+:root[data-theme="dark"] [data-difficulty="hard"] {
+  --primary: #a18bff;
+  --primary-strong: #8266e8;
+  --peer: #2b2740;
+  --same: #3d3363;
+}
+:root[data-theme="dark"] [data-difficulty="expert"] {
+  --primary: #ff8a47;
+  --primary-strong: #e8681f;
+  --peer: #33291f;
+  --same: #4f3a28;
 }
 
 html {

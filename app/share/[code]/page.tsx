@@ -32,7 +32,10 @@ export default async function SharePage({ params }: Props) {
   if (!record) notFound();
 
   return (
-    <main className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-6 overflow-hidden px-5 py-10">
+    <main
+      data-difficulty={record.difficulty}
+      className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-6 overflow-hidden px-5 py-10"
+    >
       {/* 로고 */}
       <div className="flex items-center gap-2.5">
         <Emblem size={26} />

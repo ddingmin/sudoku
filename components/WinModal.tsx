@@ -6,6 +6,7 @@ import confetti from "canvas-confetti";
 import { ShareRecord, encodeRecord, shareText } from "@/lib/encode";
 import { downloadShareImage, shareImageFile } from "@/lib/shareImage";
 import { shareVideo } from "@/lib/shareVideo";
+import { DIFF_THEME } from "@/lib/palette";
 import { highlightLines } from "@/lib/recap";
 import ShareCard from "./ShareCard";
 import RecapBoard from "./RecapBoard";
@@ -17,8 +18,8 @@ interface WinModalProps {
   onClose: () => void;
 }
 
-function fireConfetti() {
-  const colors = ["#2b4cff", "#c8f04d", "#e93a5e", "#ffffff"];
+function fireConfetti(primary: string) {
+  const colors = [primary, "#c8f04d", "#e93a5e", "#ffffff"];
   confetti({ particleCount: 90, spread: 75, origin: { y: 0.7 }, colors, disableForReducedMotion: true });
   setTimeout(
     () => confetti({ particleCount: 50, angle: 60, spread: 60, origin: { x: 0, y: 0.8 }, colors, disableForReducedMotion: true }),
@@ -36,7 +37,7 @@ export default function WinModal({ record, puzzle, onNewGame, onClose }: WinModa
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
 
   useEffect(() => {
-    const t = setTimeout(fireConfetti, 350);
+    const t = setTimeout(() => fireConfetti(DIFF_THEME[record.difficulty].primary), 350);
     return () => clearTimeout(t);
   }, []);
 
@@ -117,21 +118,21 @@ export default function WinModal({ record, puzzle, onNewGame, onClose }: WinModa
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden p-4 sm:items-center"
-      style={{ background: "var(--flood)" }}
+      style={{ background: DIFF_THEME[record.difficulty].primary }}
       onClick={onClose}
     >
       {/* 상하단 체커 패턴 */}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-50"
         style={{
-          background: "repeating-conic-gradient(var(--flood-deep) 0% 25%, transparent 0% 50%)",
+          background: `repeating-conic-gradient(${DIFF_THEME[record.difficulty].strong} 0% 25%, transparent 0% 50%)`,
           backgroundSize: "32px 32px",
         }}
       />
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 h-24 opacity-50"
         style={{
-          background: "repeating-conic-gradient(var(--flood-deep) 0% 25%, transparent 0% 50%)",
+          background: `repeating-conic-gradient(${DIFF_THEME[record.difficulty].strong} 0% 25%, transparent 0% 50%)`,
           backgroundSize: "32px 32px",
         }}
       />

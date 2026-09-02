@@ -6,7 +6,8 @@ import { generateDaily } from "../lib/sudoku";
 const OUT = process.env.OUT_DIR ?? ".";
 
 async function main() {
-  const { puzzle, solution } = generateDaily("normal");
+  const diff = (process.env.DIFF ?? "normal") as "easy" | "normal" | "hard" | "expert";
+  const { puzzle, solution } = generateDaily(diff);
   const browser = await chromium.launch({ channel: "chrome", headless: true });
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
   // 헤드리스에도 navigator.share가 존재해 시트를 영원히 기다림 → 다운로드 경로로 강제
@@ -17,6 +18,12 @@ async function main() {
   const page = await ctx.newPage();
   await page.goto("http://localhost:3000", { waitUntil: "networkidle" });
   await page.waitForTimeout(1000);
+  if (diff !== "normal") {
+    await page.getByRole("button", { name: /오늘의 스도쿠 #/ }).click();
+    const label = { easy: "쉬움", hard: "어려움", expert: "전문가" }[diff]!;
+    await page.locator("div").filter({ hasText: /^오늘의 스도쿠/ }).getByRole("button", { name: label }).first().click();
+    await page.waitForTimeout(800);
+  }
 
   const cells = page.locator('[role="grid"] button');
   for (let i = 0; i < 81; i++) {

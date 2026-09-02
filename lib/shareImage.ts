@@ -4,10 +4,9 @@
 // 리캡(무브 로그)이 있으면 고민 히트맵 보드를 포함한 2단 레이아웃으로 렌더
 import { Move, ShareRecord, formatTime } from "./encode";
 import { DIFFICULTY_LABEL, dailyNumber, generatePuzzle } from "./sudoku";
+import { DIFF_THEME } from "./palette";
 
 const C = {
-  primary: "#2b4cff",
-  primaryStrong: "#1e38cc",
   surface: "#ffffff",
   ground: "#faf8f3",
   ink: "#141414",
@@ -86,6 +85,7 @@ function drawHeatmap(
   size: number,
   puzzle: number[],
   moves: Move[],
+  heatRgb: string,
 ) {
   const cell = size / 9;
 
@@ -113,7 +113,7 @@ function drawHeatmap(
       ctx.fillRect(cxp + 1.5, cyp + 1.5, cell - 3, cell - 3);
     } else if (dts.has(i)) {
       const a = 0.16 + 0.84 * Math.min(1, dts.get(i)! / maxDt);
-      ctx.fillStyle = `rgba(43, 76, 255, ${a.toFixed(2)})`;
+      ctx.fillStyle = `rgba(${heatRgb}, ${a.toFixed(2)})`;
       roundRect(ctx, cxp + 3, cyp + 3, cell - 6, cell - 6, 5);
       ctx.fill();
     }
@@ -142,6 +142,7 @@ function drawHeatmap(
 }
 
 export async function renderShareImage(record: ShareRecord): Promise<Blob> {
+  const T = DIFF_THEME[record.difficulty];
   try {
     await Promise.all([
       document.fonts.load(`400 200px ${DISPLAY}`),
@@ -168,11 +169,11 @@ export async function renderShareImage(record: ShareRecord): Promise<Blob> {
   const ctx = canvas.getContext("2d")!;
 
   // 블루 플러드 + 상하단 체커
-  ctx.fillStyle = C.primary;
+  ctx.fillStyle = T.primary;
   ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = 0.55;
-  checker(ctx, 0, 96, 48, C.primaryStrong, W);
-  checker(ctx, H - 96, 96, 48, C.primaryStrong, W);
+  checker(ctx, 0, 96, 48, T.strong, W);
+  checker(ctx, H - 96, 96, 48, T.strong, W);
   ctx.globalAlpha = 1;
 
   // 타이틀
@@ -218,7 +219,7 @@ export async function renderShareImage(record: ShareRecord): Promise<Blob> {
     const boardSize = 330;
     const bx = cx + 56;
     const by = cy + 160;
-    drawHeatmap(ctx, bx, by, boardSize, puzzle, record.moves!);
+    drawHeatmap(ctx, bx, by, boardSize, puzzle, record.moves!, T.heatRgb);
     ctx.textAlign = "center";
     ctx.fillStyle = C.inkFaint;
     ctx.font = `700 22px ${SANS}`;
@@ -238,7 +239,7 @@ export async function renderShareImage(record: ShareRecord): Promise<Blob> {
     roundRect(ctx, -timeW / 2 - 16, -40, timeW + 32, 66, 14);
     ctx.fill();
     ctx.restore();
-    ctx.fillStyle = C.primary;
+    ctx.fillStyle = T.primary;
     ctx.fillText(time, rx, cy + 398);
     if (record.streak > 1) {
       ctx.fillStyle = C.inkFaint;
@@ -280,7 +281,7 @@ export async function renderShareImage(record: ShareRecord): Promise<Blob> {
     roundRect(ctx, -timeW / 2 - 20, -58, timeW + 40, 96, 18);
     ctx.fill();
     ctx.restore();
-    ctx.fillStyle = C.primary;
+    ctx.fillStyle = T.primary;
     ctx.fillText(time, cx + cw / 2, cy + 428);
 
     const gap = 20;
