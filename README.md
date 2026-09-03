@@ -11,7 +11,8 @@
 - **자랑하기** — 기록 카드 PNG, 풀이 타임랩스 MP4(브라우저에서 바로 인코딩), Wordle 스타일 텍스트, 공유 링크 중 골라서 공유합니다.
 - **공유 링크** — 서버 저장 없이 URL 안에 기록과 풀이 순서를 통째로 담습니다(약 80~100자). 링크를 열면 친구 기록의 리캡이 재생되고, 카톡·X·슬랙 미리보기용 OG 카드가 자동 생성됩니다.
 - **게임 도구** — 메모 모드, 되돌리기, 힌트, 숫자별 남은 개수, 키보드 입력. 진행 상태는 자동 저장되어 앱을 오갔다 와도 이어서 풉니다.
-- **기록** — 난이도별 베스트, 완주율, 데일리 연속 클리어 스트릭.
+- **기록** — 날짜별 클리어 잔디, 연속 클리어 스트릭, 난이도별 베스트, 완주율. 모두 기기에만 저장됩니다(로그인 없음).
+- **기록 옮기기** — 기록 전체를 링크 하나에 담아 다른 기기에서 열면 합쳐집니다. 서버 저장 없이 기기 이동과 백업을 해결합니다.
 - 라이트/다크 테마, 난이도별 키 컬러, 모바일 터치 최적화.
 
 ## 실행
@@ -23,7 +24,7 @@ npm run dev        # http://localhost:3000
 
 ```bash
 npm run typecheck  # 타입 검사
-npm run verify     # 퍼즐 생성기 유일해 검증 + 공유 코드 라운드트립 검증
+npm run verify     # 퍼즐 생성기 유일해 + 공유 코드·백업 코드 라운드트립 검증
 npm run build
 ```
 
@@ -32,11 +33,13 @@ npm run build
 ## 구조
 
 ```
-app/                  Next.js App Router (메인 게임, /share/[code] 공유 랜딩 + OG 이미지)
+app/                  Next.js App Router (메인 게임, /share/[code] 공유 랜딩 + OG 이미지, /restore 기록 불러오기)
 components/           보드·넘버패드·승리 모달·공유 카드 등 UI
 lib/sudoku.ts         퍼즐 생성기 (시드 기반, 유일해 검증)
 lib/useGame.ts        게임 상태·입력·저장
 lib/encode.ts         공유 코드 인코딩/디코딩 (비트 패킹, 구버전 링크 호환)
+lib/backup.ts         기록 백업 코드 (/restore#code, 기기 이동용)
+lib/stats.ts          기록 저장 (localStorage), 잔디·스트릭 파생, 병합
 lib/recap.ts          풀이 로그 → 하이라이트
 lib/shareImage.ts     공유 카드 PNG (Canvas)
 lib/shareVideo.ts     풀이 타임랩스 MP4 (WebCodecs + mp4-muxer)

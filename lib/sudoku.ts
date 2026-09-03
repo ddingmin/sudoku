@@ -155,6 +155,11 @@ export function dailyNumber(key: string): number {
   return Math.floor((d - epoch) / 86400_000) + 1;
 }
 
+// 데일리 번호 → YYYY-MM-DD (dailyNumber의 역함수)
+export function dailyKeyFromNumber(n: number): string {
+  return new Date(Date.UTC(2026, 0, 1) + (n - 1) * 86400_000).toISOString().slice(0, 10);
+}
+
 export function generateDaily(difficulty: Difficulty, key = todayKey()): Puzzle {
   return generatePuzzle(difficulty, hashSeed(`sudoku:${key}:${difficulty}`));
 }

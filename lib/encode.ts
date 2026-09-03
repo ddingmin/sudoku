@@ -1,7 +1,7 @@
 // 게임 결과 → URL-safe 공유 코드 인코딩/디코딩
 // v1: 결과 요약만 / v2: + 시드·무브 로그(풀이 리플레이용) — 둘은 디코딩만 유지(기존 링크 호환)
 // v3: 비트 패킹. 무브별 시간차 대신 리캡 하이라이트 결과값만 실어 v2 대비 ~65% 짧음
-import { Difficulty, DIFFICULTIES, DIFFICULTY_LABEL, dailyNumber } from "./sudoku";
+import { Difficulty, DIFFICULTIES, DIFFICULTY_LABEL, dailyNumber, dailyKeyFromNumber } from "./sudoku";
 import { computeHighlights, type Highlights } from "./recap";
 
 // 풀이 무브: i=칸(0~80), k=0 정답 | 1 오답 | 2 힌트, t=경과 초(절대)
@@ -65,9 +65,10 @@ function decodeMoves(s: string): Move[] | null {
 //   [무브有] 고민有 1 [칸 7 · 초 12] · 스퍼트有 1 [초 12] · 무브×8 (k*81+i, 개수는 남은 비트로 추정)
 const V3_PREFIX = "3";
 const BITS = { time: 17, count: 7, streak: 10, day: 13, seed: 32, cell: 7, sec: 12, move: 8 } as const;
-const cap = (v: number, bits: number) => Math.min(2 ** bits - 1, Math.max(0, Math.round(v)));
+export const cap = (v: number, bits: number) => Math.min(2 ** bits - 1, Math.max(0, Math.round(v)));
 
-class BitWriter {
+// 비트 단위 직렬화 (공유 코드·기록 백업 공용). 6비트 = base64url 1문자
+export class BitWriter {
   private bits: number[] = [];
   write(v: number, n: number) {
     for (let b = n - 1; b >= 0; b--) this.bits.push((v / 2 ** b) & 1);
@@ -83,7 +84,7 @@ class BitWriter {
   }
 }
 
-class BitReader {
+export class BitReader {
   private bits: number[] = [];
   private pos = 0;
   constructor(s: string) {
@@ -134,11 +135,6 @@ export function encodeRecord(r: ShareRecord): string {
   return V3_PREFIX + w.toString();
 }
 
-// 데일리 번호(2026-01-01 = #1) → YYYY-MM-DD
-function dateKeyFromDailyNumber(n: number): string {
-  return new Date(Date.UTC(2026, 0, 1) + (n - 1) * 86400_000).toISOString().slice(0, 10);
-}
-
 // 데일리 시드는 날짜·난이도에서 재계산 — generateDaily와 동일한 식
 function dailySeed(dateKey: string, difficulty: Difficulty): number {
   let h = 2166136261;
@@ -162,7 +158,7 @@ function decodeV3(code: string): ShareRecord | null {
   const streak = rd.read(BITS.streak);
   const day = rd.read(BITS.day);
   if (!difficulty || timeSec > 86400 || day < 1) return null;
-  const dateKey = dateKeyFromDailyNumber(day);
+  const dateKey = dailyKeyFromNumber(day);
   const record: ShareRecord = { difficulty, timeSec, mistakes, hints, dateKey, streak, daily, best };
   const seed = daily ? dailySeed(dateKey, difficulty) : rd.read(BITS.seed);
   if (!hasMoves) return record;

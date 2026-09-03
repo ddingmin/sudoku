@@ -4,7 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { DIFFICULTIES, DIFFICULTY_LABEL } from "@/lib/sudoku";
-import { Stats, currentStreak } from "@/lib/stats";
+import { Stats, clearedDayCount, streakInfo } from "@/lib/stats";
+import { backupUrl } from "@/lib/backup";
+import GrassGrid from "./GrassGrid";
 import { encodeRecord, formatTime, shareText, ShareRecord } from "@/lib/encode";
 
 interface StatsPanelProps {
@@ -14,7 +16,8 @@ interface StatsPanelProps {
 
 export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
   const [toast, setToast] = useState<string | null>(null);
-  const streak = currentStreak(stats);
+  const { current: streak, max: maxStreak } = streakInfo(stats.days);
+  const dayCount = clearedDayCount(stats);
   const winRate = stats.played > 0 ? Math.round((stats.cleared / stats.played) * 100) : 0;
 
   const shareHistory = async (r: ShareRecord) => {
@@ -30,9 +33,32 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
     }
     try {
       await navigator.clipboard.writeText(`${text}\n${url}`);
-      setToast("링크를 복사했어요");
-      setTimeout(() => setToast(null), 2000);
+      showToast("링크를 복사했어요");
     } catch {}
+  };
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  };
+
+  // 기록 옮기기: 기록 전체를 담은 링크를 공유/복사. 다른 기기에서 열면 합쳐진다
+  const exportBackup = async () => {
+    const url = backupUrl(stats, location.origin);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "스도쿠 기록 옮기기", text: "다른 기기에서 이 링크를 열면 기록이 합쳐져요", url });
+        return;
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("기록 링크를 복사했어요");
+    } catch {
+      showToast("복사에 실패했어요");
+    }
   };
 
   const tile = (label: string, value: string, color?: string) => (
@@ -84,6 +110,19 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
           {tile("클리어", `${stats.cleared}`)}
           {tile("완주율", `${winRate}%`)}
           {tile("연속", streak > 0 ? `${streak}일` : "—", streak > 0 ? "var(--danger)" : undefined)}
+        </div>
+
+        {/* 잔디 */}
+        <div className="mt-6 flex items-end justify-between">
+          <h3 className="text-[0.68rem] font-extrabold uppercase tracking-wider" style={{ color: "var(--ink-faint)" }}>
+            매일의 기록
+          </h3>
+          <p className="tabular text-[0.66rem] font-bold" style={{ color: "var(--ink-soft)" }}>
+            {dayCount > 0 ? `${dayCount}일 클리어 · 최장 ${maxStreak}일 연속` : "오늘의 스도쿠를 깨면 칸이 채워져요"}
+          </p>
+        </div>
+        <div className="chunky-sm mt-2 p-3" style={{ boxShadow: "var(--shadow-sm)" }}>
+          <GrassGrid days={stats.days} />
         </div>
 
         {/* 난이도별 베스트 */}
@@ -183,6 +222,23 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
             })}
           </ul>
         )}
+
+        {/* 기록 옮기기 */}
+        <div className="mt-6 flex items-center justify-between gap-3 p-4" style={{ background: "var(--surface)", border: "2px dashed var(--ink-faint)", borderRadius: "var(--r-md)" }}>
+          <div className="min-w-0">
+            <p className="text-[0.78rem] font-extrabold">다른 기기로 기록 옮기기</p>
+            <p className="mt-0.5 text-[0.66rem] font-bold leading-snug" style={{ color: "var(--ink-faint)" }}>
+              링크 하나에 기록이 통째로 담겨요. 새 기기에서 열면 합쳐집니다.
+            </p>
+          </div>
+          <button
+            onClick={exportBackup}
+            className="chunky-sm chunky-press shrink-0 px-3.5 py-2.5 text-[0.76rem] font-extrabold"
+            style={{ background: "var(--pop)", color: "var(--on-pop)" }}
+          >
+            링크 만들기
+          </button>
+        </div>
 
         {toast && (
           <p className="mt-3 rounded-full px-4 py-2 text-center text-[0.78rem] font-extrabold" style={{ background: "var(--ink)", color: "var(--ground)" }}>
