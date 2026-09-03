@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = record.daily
     ? `스도쿠 #${dailyNumber(record.dateKey)} · ${DIFFICULTY_LABEL[record.difficulty]} ${formatTime(record.timeSec)}`
     : `스도쿠 · ${DIFFICULTY_LABEL[record.difficulty]} ${formatTime(record.timeSec)}`;
-  const description = `실수 ${record.mistakes} · 힌트 ${record.hints}${record.streak > 1 ? ` · ${record.streak}일 연속` : ""} — ${shareHook(record)} 매일 한 판, 스도쿠.`;
+  const description = `실수 ${record.mistakes} · 힌트 ${record.hints}${record.streak > 1 ? ` · ${record.streak}일 연속` : ""} — ${shareHook(record)}`;
   return {
     title,
     description,

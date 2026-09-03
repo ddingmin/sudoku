@@ -264,7 +264,7 @@ export async function renderShareImage(record: ShareRecord): Promise<Blob> {
 
     ctx.fillStyle = C.inkFaint;
     ctx.font = `700 26px ${SANS}`;
-    ctx.fillText("매일 한 판 · 스도쿠", cx + cw / 2, cy + ch - 32);
+    ctx.fillText("스도쿠", cx + cw / 2, cy + ch - 32);
   } else {
     // ── 기본 레이아웃 (리캡 없음) ──
     ctx.textAlign = "center";
@@ -308,7 +308,7 @@ export async function renderShareImage(record: ShareRecord): Promise<Blob> {
     ctx.setLineDash([]);
     ctx.fillStyle = C.inkFaint;
     ctx.font = `700 26px ${SANS}`;
-    ctx.fillText("매일 한 판 · 스도쿠", cx + cw / 2, cy + ch - 30);
+    ctx.fillText("스도쿠", cx + cw / 2, cy + ch - 30);
   }
 
   // 스티커 (카드 위에)

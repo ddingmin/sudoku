@@ -96,7 +96,7 @@ export default function ShareCard({ record }: { record: ShareRecord }) {
       <div className="mt-4 flex items-center justify-center gap-2 border-t-2 border-dashed pt-3.5" style={{ borderColor: "var(--cell-line)" }}>
         <span className="checker h-2 w-9" />
         <span className="text-[0.62rem] font-extrabold" style={{ color: "var(--ink-faint)" }}>
-          매일 한 판 · 스도쿠
+          스도쿠
         </span>
         <span className="checker h-2 w-9" />
       </div>

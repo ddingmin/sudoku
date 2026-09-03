@@ -56,7 +56,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
             className="sticker -rotate-6"
             style={{ background: "var(--primary)", color: "var(--on-primary)" }}
           >
-            매일 한 판
+            {daily ? `#${dailyNumber(dateKey)}` : "자유"}
           </span>
         </h1>
         <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
             className="chunky-sm chunky-press flex items-center gap-1.5 rounded-full! py-2 pl-3.5 pr-2.5 text-[0.78rem] font-extrabold"
             style={{ color: "var(--ink)" }}
           >
-            {daily ? `오늘의 스도쿠 #${dailyNumber(dateKey)}` : "자유 스도쿠"}
+            {daily ? "오늘의 스도쿠" : "자유 스도쿠"}
             <span style={{ color: "var(--primary)" }}>{DIFFICULTY_LABEL[difficulty]}</span>
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" strokeWidth="3" strokeLinecap="round">
               <path d="m6 9 6 6 6-6" />

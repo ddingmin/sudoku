@@ -77,7 +77,7 @@ export default async function OgImage({ params }: { params: Promise<{ code: stri
             color: C.surface,
           }}
         >
-          스도쿠 — 매일 한 판
+          스도쿠
         </div>
       ),
       { ...size, fonts },

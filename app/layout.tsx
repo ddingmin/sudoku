@@ -16,10 +16,10 @@ export const metadata: Metadata = {
         ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
         : "http://localhost:3000"),
   ),
-  title: "스도쿠 — 매일 한 판",
+  title: "스도쿠",
   description: "매일 자정 새로운 스도쿠가 열려요. 기록을 공유할 수 있습니다.",
   openGraph: {
-    title: "스도쿠 — 매일 한 판",
+    title: "스도쿠",
     description: "매일 자정 새로운 스도쿠가 열려요. 기록을 공유할 수 있습니다.",
     type: "website",
   },
