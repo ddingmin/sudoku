@@ -1,5 +1,5 @@
 // 무브 로그에서 리캡 하이라이트 계산
-import { Move } from "./encode";
+import type { Move, ShareRecord } from "./encode";
 
 export interface Highlights {
   longestThink: { i: number; sec: number } | null; // 가장 오래 고민한 칸
@@ -38,9 +38,15 @@ function fmtSec(sec: number): string {
   return s > 0 ? `${m}분 ${s}초` : `${m}분`;
 }
 
+// 기록의 하이라이트: 공유 코드에서 디코딩된 값이 있으면 그것을, 없으면 무브 로그(시간 포함)에서 계산
+export function recordHighlights(r: ShareRecord): Highlights | null {
+  if (r.highlights) return r.highlights;
+  if (r.moves && r.moves.length > 0) return computeHighlights(r.moves);
+  return null;
+}
+
 // 리캡 하이라이트를 자연스러운 문장으로 (승리 모달·공유 랜딩 공용)
-export function highlightLines(moves: Move[], mistakes: number, hints: number): string[] {
-  const h = computeHighlights(moves);
+export function highlightLines(h: Highlights, mistakes: number, hints: number): string[] {
   const lines: string[] = [];
   if (h.longestThink && h.longestThink.sec >= 5) {
     lines.push(`한 칸에서 ${fmtSec(h.longestThink.sec)}를 고민했어요`);

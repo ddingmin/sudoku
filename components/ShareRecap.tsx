@@ -3,7 +3,7 @@
 // 공유 랜딩의 풀이 리플레이 — 시드로 퍼즐을 재생성해 타임랩스 재생
 import { useMemo } from "react";
 import { ShareRecord } from "@/lib/encode";
-import { highlightLines } from "@/lib/recap";
+import { highlightLines, recordHighlights } from "@/lib/recap";
 import { generatePuzzle } from "@/lib/sudoku";
 import RecapBoard from "./RecapBoard";
 
@@ -34,7 +34,7 @@ export default function ShareRecap({ record }: { record: ShareRecord }) {
         <p className="text-[0.66rem] font-extrabold tracking-widest" style={{ color: "var(--ink-faint)" }}>
           친구는 이렇게 풀었어요
         </p>
-        {highlightLines(record.moves, record.mistakes, record.hints).map((line) => (
+        {highlightLines(recordHighlights(record)!, record.mistakes, record.hints).map((line) => (
           <p key={line} className="text-[0.74rem] font-bold leading-snug" style={{ color: "var(--ink)" }}>
             {line}
           </p>

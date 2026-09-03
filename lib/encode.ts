@@ -1,6 +1,8 @@
 // 게임 결과 → URL-safe 공유 코드 인코딩/디코딩
-// v1: 결과 요약만 / v2: + 시드·무브 로그(풀이 리플레이용)
+// v1: 결과 요약만 / v2: + 시드·무브 로그(풀이 리플레이용) — 둘은 디코딩만 유지(기존 링크 호환)
+// v3: 비트 패킹. 무브별 시간차 대신 리캡 하이라이트 결과값만 실어 v2 대비 ~65% 짧음
 import { Difficulty, DIFFICULTIES, DIFFICULTY_LABEL, dailyNumber } from "./sudoku";
+import { computeHighlights, type Highlights } from "./recap";
 
 // 풀이 무브: i=칸(0~80), k=0 정답 | 1 오답 | 2 힌트, t=경과 초(절대)
 export interface Move {
@@ -18,8 +20,9 @@ export interface ShareRecord {
   streak: number; // 데일리 연속 클리어 (0 = 비데일리)
   daily: boolean;
   best: boolean; // 신기록 여부
-  seed?: number; // 퍼즐 시드 (리플레이용, v2)
-  moves?: Move[]; // 풀이 로그 (리플레이용, v2)
+  seed?: number; // 퍼즐 시드 (리플레이용)
+  moves?: Move[]; // 풀이 로그 (리플레이용). v3 디코딩 결과는 t가 0으로 채워짐 — 시간은 highlights를 볼 것
+  highlights?: Highlights; // 리캡 하이라이트. v3 디코딩 시 채워짐 (무브 시간 로그가 없으므로)
 }
 
 const DIFF_CODE: Record<Difficulty, string> = {
@@ -31,33 +34,13 @@ const DIFF_CODE: Record<Difficulty, string> = {
 
 const B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
-function toBase64Url(s: string): string {
-  const b64 =
-    typeof Buffer !== "undefined"
-      ? Buffer.from(s, "utf-8").toString("base64")
-      : btoa(String.fromCharCode(...new TextEncoder().encode(s)));
-  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
 function fromBase64Url(s: string): string {
   const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (s.length % 4)) % 4);
   if (typeof Buffer !== "undefined") return Buffer.from(b64, "base64").toString("utf-8");
   return new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
 }
 
-// 무브당 3문자: (k*81+i)를 12비트 2문자로, 직전 무브와의 시간 차(0~63초 캡)를 1문자로
-function encodeMoves(moves: Move[]): string {
-  let out = "";
-  let prev = 0;
-  for (const m of moves) {
-    const v = m.k * 81 + m.i;
-    const dt = Math.min(63, Math.max(0, Math.round(m.t - prev)));
-    out += B64[v >> 6] + B64[v & 63] + B64[dt];
-    prev = m.t;
-  }
-  return out;
-}
-
+// (v1/v2) 무브당 3문자: (k*81+i) 12비트 2문자 + 직전 무브와의 시간 차 1문자
 function decodeMoves(s: string): Move[] | null {
   if (s.length % 3 !== 0) return null;
   const moves: Move[] = [];
@@ -75,58 +58,175 @@ function decodeMoves(s: string): Move[] | null {
   return moves;
 }
 
+// ── v3 비트 패킹 ─────────────────────────────────────────────
+// 코드 = "3" + 비트열을 6비트씩 base64url 문자로. 레이아웃(비트):
+//   난이도 2 · 데일리 1 · 신기록 1 · 무브有 1 · 시간 17 · 실수 7 · 힌트 7 · 연속 10 · 데일리번호 13
+//   [자유 모드] 시드 32
+//   [무브有] 고민有 1 [칸 7 · 초 12] · 스퍼트有 1 [초 12] · 무브×8 (k*81+i, 개수는 남은 비트로 추정)
+const V3_PREFIX = "3";
+const BITS = { time: 17, count: 7, streak: 10, day: 13, seed: 32, cell: 7, sec: 12, move: 8 } as const;
+const cap = (v: number, bits: number) => Math.min(2 ** bits - 1, Math.max(0, Math.round(v)));
+
+class BitWriter {
+  private bits: number[] = [];
+  write(v: number, n: number) {
+    for (let b = n - 1; b >= 0; b--) this.bits.push((v / 2 ** b) & 1);
+  }
+  toString(): string {
+    let out = "";
+    for (let p = 0; p < this.bits.length; p += 6) {
+      let v = 0;
+      for (let b = 0; b < 6; b++) v = v * 2 + (this.bits[p + b] ?? 0);
+      out += B64[v];
+    }
+    return out;
+  }
+}
+
+class BitReader {
+  private bits: number[] = [];
+  private pos = 0;
+  constructor(s: string) {
+    for (const ch of s) {
+      const v = B64.indexOf(ch);
+      if (v < 0) throw new Error("bad char");
+      for (let b = 5; b >= 0; b--) this.bits.push((v >> b) & 1);
+    }
+  }
+  get remaining() {
+    return this.bits.length - this.pos;
+  }
+  read(n: number): number {
+    if (this.pos + n > this.bits.length) throw new Error("eof");
+    let v = 0;
+    for (let b = 0; b < n; b++) v = v * 2 + this.bits[this.pos++];
+    return v;
+  }
+  flag(): boolean {
+    return this.read(1) === 1;
+  }
+}
+
 export function encodeRecord(r: ShareRecord): string {
-  const v2 = r.seed !== undefined && r.moves !== undefined && r.moves.length > 0;
-  const parts = [
-    v2 ? "2" : "1",
-    DIFF_CODE[r.difficulty],
-    String(r.timeSec),
-    String(r.mistakes),
-    String(r.hints),
-    r.dateKey.replace(/-/g, ""),
-    String(r.streak),
-    r.daily ? "d" : "f",
-    r.best ? "b" : "-",
-    ...(v2 ? [r.seed!.toString(36), encodeMoves(r.moves!)] : []),
-  ];
-  return toBase64Url(parts.join("|"));
+  const hasMoves = r.seed !== undefined && r.moves !== undefined && r.moves.length > 0;
+  const w = new BitWriter();
+  w.write(DIFFICULTIES.indexOf(r.difficulty), 2);
+  w.write(r.daily ? 1 : 0, 1);
+  w.write(r.best ? 1 : 0, 1);
+  w.write(hasMoves ? 1 : 0, 1);
+  w.write(cap(r.timeSec, BITS.time), BITS.time);
+  w.write(cap(r.mistakes, BITS.count), BITS.count);
+  w.write(cap(r.hints, BITS.count), BITS.count);
+  w.write(cap(r.streak, BITS.streak), BITS.streak);
+  w.write(cap(dailyNumber(r.dateKey), BITS.day), BITS.day);
+  if (!r.daily) w.write((r.seed ?? 0) >>> 0, BITS.seed);
+  if (hasMoves) {
+    const h = r.highlights ?? computeHighlights(r.moves!);
+    w.write(h.longestThink ? 1 : 0, 1);
+    if (h.longestThink) {
+      w.write(h.longestThink.i, BITS.cell);
+      w.write(cap(h.longestThink.sec, BITS.sec), BITS.sec);
+    }
+    w.write(h.lastSpurt ? 1 : 0, 1);
+    if (h.lastSpurt) w.write(cap(h.lastSpurt.sec, BITS.sec), BITS.sec);
+    for (const m of r.moves!) w.write(m.k * 81 + m.i, BITS.move);
+  }
+  return V3_PREFIX + w.toString();
+}
+
+// 데일리 번호(2026-01-01 = #1) → YYYY-MM-DD
+function dateKeyFromDailyNumber(n: number): string {
+  return new Date(Date.UTC(2026, 0, 1) + (n - 1) * 86400_000).toISOString().slice(0, 10);
+}
+
+// 데일리 시드는 날짜·난이도에서 재계산 — generateDaily와 동일한 식
+function dailySeed(dateKey: string, difficulty: Difficulty): number {
+  let h = 2166136261;
+  const str = `sudoku:${dateKey}:${difficulty}`;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function decodeV3(code: string): ShareRecord | null {
+  const rd = new BitReader(code.slice(V3_PREFIX.length));
+  const difficulty = DIFFICULTIES[rd.read(2)];
+  const daily = rd.flag();
+  const best = rd.flag();
+  const hasMoves = rd.flag();
+  const timeSec = rd.read(BITS.time);
+  const mistakes = rd.read(BITS.count);
+  const hints = rd.read(BITS.count);
+  const streak = rd.read(BITS.streak);
+  const day = rd.read(BITS.day);
+  if (!difficulty || timeSec > 86400 || day < 1) return null;
+  const dateKey = dateKeyFromDailyNumber(day);
+  const record: ShareRecord = { difficulty, timeSec, mistakes, hints, dateKey, streak, daily, best };
+  const seed = daily ? dailySeed(dateKey, difficulty) : rd.read(BITS.seed);
+  if (!hasMoves) return record;
+
+  const longestThink = rd.flag() ? { i: rd.read(BITS.cell), sec: rd.read(BITS.sec) } : null;
+  if (longestThink && longestThink.i > 80) return null;
+  const lastSpurt = rd.flag() ? { cells: 10, sec: rd.read(BITS.sec) } : null;
+
+  const count = Math.floor(rd.remaining / BITS.move);
+  if (count < 1 || count > 400) return null;
+  const moves: Move[] = [];
+  for (let n = 0; n < count; n++) {
+    const v = rd.read(BITS.move);
+    if (v > 242) return null;
+    moves.push({ i: v % 81, k: Math.floor(v / 81) as 0 | 1 | 2, t: 0 });
+  }
+  const errorCells = new Set(moves.filter((m) => m.k === 1).map((m) => m.i)).size;
+  record.seed = seed;
+  record.moves = moves;
+  record.highlights = { longestThink, lastSpurt, errorCells };
+  return record;
+}
+
+// v1/v2: "|" 구분 필드 전체를 base64url로 감싼 형식
+function decodeLegacy(code: string): ShareRecord | null {
+  const parts = fromBase64Url(code).split("|");
+  const version = parts[0];
+  if ((version !== "1" && version !== "2") || parts.length < 9) return null;
+  const difficulty = DIFFICULTIES.find((d) => DIFF_CODE[d] === parts[1]);
+  const raw = parts[5];
+  if (!difficulty || !/^\d{8}$/.test(raw)) return null;
+  const timeSec = Number(parts[2]);
+  const mistakes = Number(parts[3]);
+  const hints = Number(parts[4]);
+  const streak = Number(parts[6]);
+  if (![timeSec, mistakes, hints, streak].every((n) => Number.isInteger(n) && n >= 0)) return null;
+  if (timeSec > 86400) return null;
+
+  const record: ShareRecord = {
+    difficulty,
+    timeSec,
+    mistakes,
+    hints,
+    dateKey: `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`,
+    streak,
+    daily: parts[7] === "d",
+    best: parts[8] === "b",
+  };
+
+  if (version === "2" && parts.length >= 11) {
+    const seed = parseInt(parts[9], 36);
+    const moves = decodeMoves(parts[10]);
+    if (Number.isInteger(seed) && seed >= 0 && moves && moves.length > 0 && moves.length <= 400) {
+      record.seed = seed;
+      record.moves = moves;
+    }
+  }
+  return record;
 }
 
 export function decodeRecord(code: string): ShareRecord | null {
   try {
-    const parts = fromBase64Url(code).split("|");
-    const version = parts[0];
-    if ((version !== "1" && version !== "2") || parts.length < 9) return null;
-    const difficulty = DIFFICULTIES.find((d) => DIFF_CODE[d] === parts[1]);
-    const raw = parts[5];
-    if (!difficulty || !/^\d{8}$/.test(raw)) return null;
-    const timeSec = Number(parts[2]);
-    const mistakes = Number(parts[3]);
-    const hints = Number(parts[4]);
-    const streak = Number(parts[6]);
-    if (![timeSec, mistakes, hints, streak].every((n) => Number.isInteger(n) && n >= 0)) return null;
-    if (timeSec > 86400) return null;
-
-    const record: ShareRecord = {
-      difficulty,
-      timeSec,
-      mistakes,
-      hints,
-      dateKey: `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`,
-      streak,
-      daily: parts[7] === "d",
-      best: parts[8] === "b",
-    };
-
-    if (version === "2" && parts.length >= 11) {
-      const seed = parseInt(parts[9], 36);
-      const moves = decodeMoves(parts[10]);
-      if (Number.isInteger(seed) && seed >= 0 && moves && moves.length > 0 && moves.length <= 400) {
-        record.seed = seed;
-        record.moves = moves;
-      }
-    }
-    return record;
+    // 레거시 코드는 base64("1|"/"2|") → 항상 "M"으로 시작하므로 "3" 접두와 충돌 없음
+    return code.startsWith(V3_PREFIX) ? decodeV3(code) : decodeLegacy(code);
   } catch {
     return null;
   }

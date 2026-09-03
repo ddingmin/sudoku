@@ -7,7 +7,7 @@ import { ShareRecord, encodeRecord, shareText } from "@/lib/encode";
 import { downloadShareImage, shareImageFile } from "@/lib/shareImage";
 import { shareVideo } from "@/lib/shareVideo";
 import { DIFF_THEME } from "@/lib/palette";
-import { highlightLines } from "@/lib/recap";
+import { computeHighlights, highlightLines } from "@/lib/recap";
 import ShareCard from "./ShareCard";
 import RecapBoard from "./RecapBoard";
 
@@ -169,7 +169,7 @@ export default function WinModal({ record, puzzle, onNewGame, onClose }: WinModa
               <p className="text-[0.66rem] font-extrabold tracking-widest" style={{ color: "var(--ink-faint)" }}>
                 이번 판 돌아보기
               </p>
-              {highlightLines(record.moves, record.mistakes, record.hints).map((line) => (
+              {highlightLines(computeHighlights(record.moves), record.mistakes, record.hints).map((line) => (
                 <p key={line} className="text-[0.74rem] font-bold leading-snug" style={{ color: "var(--ink)" }}>
                   {line}
                 </p>
