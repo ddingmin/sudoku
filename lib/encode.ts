@@ -246,33 +246,32 @@ export function formatTime(sec: number): string {
 
 // 공유 카피 — OG 썸네일이 스탯(번호·시간·난이도·실수·힌트·신기록·연속)을 모두 보여주므로
 // 텍스트는 이미지가 못 하는 것만 한다: 1인칭 자랑 한 줄 + 도전 한 줄
-// 원칙: 구체적 벤치마크(시간) + 공정한 도전("같은 문제") + 가벼운 도발
+// 원칙: 구체적 벤치마크(시간) + 공정한 도전("같은 문제") + 가벼운 도발. 이모지·밈 슬랭은 쓰지 않는다
 
-// 자랑 조각: "힌트 없이 16:11 컷" 등, 기록에서 가장 내세울 포인트 하나만
+// 자랑 조각: "힌트 없이 16:11" 등, 기록에서 가장 내세울 포인트 하나만
 export function shareFlex(r: ShareRecord): string {
   const t = formatTime(r.timeSec);
   const perfect = r.mistakes === 0 && r.hints === 0;
   if (perfect && r.best) return `실수 0 힌트 0 신기록 ${t}`;
-  if (perfect) return `실수도 힌트도 0, ${t}`;
-  if (r.hints === 0) return `힌트 없이 ${t} 컷`;
+  if (perfect) return `실수 0 힌트 0, ${t}`;
+  if (r.hints === 0) return `힌트 없이 ${t}`;
   if (r.best) return `신기록 ${t}`;
   return `${t} 클리어`;
 }
 
-// 도전 한 줄 (OG 설명에도 사용)
+// 도전 한 줄 (OG 설명에도 사용). 이모지·밈 없이 질문 하나
 export function shareHook(r: ShareRecord): string {
   const perfect = r.mistakes === 0 && r.hints === 0;
   const same = r.daily ? "같은 문제로 " : "";
-  if (perfect && r.best) return `이건 못 깰 듯? 😏`;
-  if (perfect) return `${same}완벽하게 푸는 사람만 인정 😏`;
-  if (r.hints === 0) return `${same}나보다 빠르면 인정 👀`;
-  if (r.best) return `${same}이 기록 넘어볼래? 🏆`;
-  return r.daily ? `같은 문제, 이 안에 풀면 인정 👀` : `너는 몇 분? 👀`;
+  if (perfect && r.best) return `${same}실수 없이 이보다 빨리 풀 수 있어?`;
+  if (perfect) return `${same}실수 없이 풀 수 있어?`;
+  if (r.hints === 0) return `${same}나보다 빨리 풀 수 있어?`;
+  return r.daily ? "같은 문제, 이 기록 깰 수 있어?" : "이 기록, 깰 수 있어?";
 }
 
 // 공유 텍스트: 자랑 헤드라인 → 도전 → 링크 (스탯은 썸네일에 맡긴다)
 export function shareText(r: ShareRecord, url?: string): string {
   const id = r.daily ? `#${dailyNumber(r.dateKey)} ` : "";
-  const title = `🧩 스도쿠 ${id}${DIFFICULTY_LABEL[r.difficulty]} · ${shareFlex(r)}`;
+  const title = `스도쿠 ${id}${DIFFICULTY_LABEL[r.difficulty]} · ${shareFlex(r)}`;
   return [title, shareHook(r), ...(url ? [`👉 ${url}`] : [])].join("\n");
 }

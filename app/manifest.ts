@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "스도쿠",
     short_name: "스도쿠",
-    description: "매일 자정 새로운 스도쿠가 열려요. 기록을 공유할 수 있습니다.",
+    description: "매일 자정 새로운 스도쿠. 기록 공유와 친구와의 1:1 대결.",
     start_url: "/",
     display: "standalone",
     background_color: "#faf8f3",

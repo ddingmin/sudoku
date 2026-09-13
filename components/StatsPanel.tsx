@@ -47,7 +47,7 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
     const url = backupUrl(stats, location.origin);
     if (navigator.share) {
       try {
-        await navigator.share({ title: "스도쿠 기록 옮기기", text: "다른 기기에서 이 링크를 열면 기록이 합쳐져요", url });
+        await navigator.share({ title: "스도쿠 기록 옮기기", text: "이 링크를 새 기기에서 열면 기록이 합쳐집니다", url });
         return;
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return;
@@ -118,7 +118,7 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
             매일의 기록
           </h3>
           <p className="tabular text-[0.66rem] font-bold" style={{ color: "var(--ink-soft)" }}>
-            {dayCount > 0 ? `${dayCount}일 클리어 · 최장 ${maxStreak}일 연속` : "오늘의 스도쿠를 깨면 칸이 채워져요"}
+            {dayCount > 0 ? `${dayCount}일 클리어 · 최장 ${maxStreak}일 연속` : "아직 기록 없음"}
           </p>
         </div>
         <div className="chunky-sm mt-2 p-3" style={{ boxShadow: "var(--shadow-sm)" }}>
@@ -148,8 +148,7 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
             className="mt-3 p-6 text-center text-[0.8rem] font-bold"
             style={{ background: "var(--surface)", border: "2px dashed var(--cell-line)", borderRadius: "var(--r-md)", color: "var(--ink-faint)" }}
           >
-            아직 클리어한 스도쿠가 없어요.
-            <br />첫 판 깨면 여기부터 채워집니다.
+            아직 클리어 기록이 없어요
           </p>
         ) : (
           <ul className="mt-2 flex flex-col gap-2">
@@ -228,7 +227,7 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
           <div className="min-w-0">
             <p className="text-[0.78rem] font-extrabold">다른 기기로 기록 옮기기</p>
             <p className="mt-0.5 text-[0.66rem] font-bold leading-snug" style={{ color: "var(--ink-faint)" }}>
-              링크 하나에 기록이 통째로 담겨요. 새 기기에서 열면 합쳐집니다.
+              링크를 새 기기에서 열면 기록이 합쳐집니다
             </p>
           </div>
           <button

@@ -115,7 +115,7 @@ export default function WinModal({ record, puzzle, opponent, onNewGame, onClose 
     setVideoProgress(0);
     try {
       const result = await shareVideo(record, shareText(record, shareUrl()), setVideoProgress);
-      if (result === "downloaded") showToast("영상을 저장했어요 — 릴스/스토리에 올려보세요");
+      if (result === "downloaded") showToast("영상을 저장했어요");
       else if (result === null) await shareStory();
     } catch {
       showToast("영상 생성에 실패했어요");
@@ -196,7 +196,7 @@ export default function WinModal({ record, puzzle, opponent, onNewGame, onClose 
             <RecapBoard puzzle={puzzle} moves={record.moves} size={128} />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <p className="text-[0.66rem] font-extrabold tracking-widest" style={{ color: "var(--ink-faint)" }}>
-                이번 판 돌아보기
+                풀이 리캡
               </p>
               {highlightLines(computeHighlights(record.moves), record.mistakes, record.hints).map((line) => (
                 <p key={line} className="text-[0.74rem] font-bold leading-snug" style={{ color: "var(--ink)" }}>
@@ -274,7 +274,7 @@ export default function WinModal({ record, puzzle, opponent, onNewGame, onClose 
                 <path d="M10 14l-6 6" />
                 <path d="M3 3l8.5 8.5" />
               </svg>
-              친구에게 1:1 대결 신청
+              1:1 대결 신청
             </button>
           )}
           <div className="flex gap-2.5">

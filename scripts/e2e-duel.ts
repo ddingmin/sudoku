@@ -33,7 +33,7 @@ async function main() {
   await a.waitForTimeout(800);
   await solve(a, puzzle, solution, 12); // 중간중간 멈춰 시간이 쌓이게
   await a.waitForTimeout(2200);
-  await a.getByRole("button", { name: "친구에게 1:1 대결 신청" }).click();
+  await a.getByRole("button", { name: "1:1 대결 신청" }).click();
   await a.waitForTimeout(500);
   const clipA = await a.evaluate(() => navigator.clipboard.readText());
   console.log("A 도전장:\n" + clipA);

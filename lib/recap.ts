@@ -45,16 +45,16 @@ export function recordHighlights(r: ShareRecord): Highlights | null {
   return null;
 }
 
-// 리캡 하이라이트를 자연스러운 문장으로 (승리 모달·공유 랜딩 공용)
+// 리캡 하이라이트를 짧은 구로 (승리 모달·공유 랜딩 공용). 서술형 대신 기록 읽어주듯 명사형
 export function highlightLines(h: Highlights, mistakes: number, hints: number): string[] {
   const lines: string[] = [];
   if (h.longestThink && h.longestThink.sec >= 5) {
-    lines.push(`한 칸에서 ${fmtSec(h.longestThink.sec)}를 고민했어요`);
+    lines.push(`한 칸에서 ${fmtSec(h.longestThink.sec)} 고민`);
   }
   if (h.lastSpurt && h.lastSpurt.sec >= 10) {
-    lines.push(`마지막 ${h.lastSpurt.cells}칸은 ${fmtSec(h.lastSpurt.sec)} 만에 채웠어요`);
+    lines.push(`마지막 ${h.lastSpurt.cells}칸은 ${fmtSec(h.lastSpurt.sec)}에 마무리`);
   }
-  lines.push(mistakes > 0 ? `${mistakes}번 틀렸다가 바로잡았어요` : "한 번도 틀리지 않았어요");
-  if (hints > 0) lines.push(`힌트를 ${hints}번 썼어요`);
+  lines.push(mistakes > 0 ? `실수 ${mistakes}번, 모두 바로잡음` : "실수 없이 클리어");
+  if (hints > 0) lines.push(`힌트 ${hints}번`);
   return lines.slice(0, 4);
 }

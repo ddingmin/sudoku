@@ -20,9 +20,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = d.opponent
     ? `스도쿠 ${id} 대결 결과 · ${formatTime(d.record.timeSec)} vs ${formatTime(d.opponent.timeSec)}`
     : `스도쿠 ${id} · 1:1 대결 신청 ${formatTime(d.record.timeSec)}`;
+  const outcome = d.opponent ? judge(d.record.timeSec, d.opponent.timeSec) : null;
   const description = d.opponent
-    ? `${gapText(d.record.timeSec, d.opponent.timeSec)}로 ${judge(d.record.timeSec, d.opponent.timeSec) === "win" ? "답장" : judge(d.record.timeSec, d.opponent.timeSec) === "lose" ? "도전장" : "무승부"} 승 — 이 기록에도 도전해볼래?`
-    : `같은 문제, 친구의 고스트와 같이 달려요. 실수 ${d.record.mistakes} · 힌트 ${d.record.hints}`;
+    ? `${outcome === "tie" ? "동점" : `${gapText(d.record.timeSec, d.opponent.timeSec)}로 ${outcome === "win" ? "답장" : "도전장"} 승`} · 같은 문제로 도전 가능`
+    : `같은 문제로 1:1 대결. 상대 기록 ${formatTime(d.record.timeSec)} · 실수 ${d.record.mistakes} · 힌트 ${d.record.hints}`;
   return {
     title,
     description,
@@ -53,14 +54,14 @@ export default async function DuelPage({ params }: Props) {
           {/* 답장: 결과 */}
           <div className="flex flex-col items-center gap-1.5">
             <h1 className="font-display text-center text-[2.1rem] leading-[1.25]">
-              대결 결과
+              대결
               <br />
               <span className="swipe">
-                <span>도착했어요</span>
+                <span>결과</span>
               </span>
             </h1>
             <p className="text-[0.82rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-              같은 문제를 두 사람이 풀었어요
+              1:1 고스트 대결
             </p>
           </div>
           <DuelResultCard
@@ -81,7 +82,7 @@ export default async function DuelPage({ params }: Props) {
               </span>
             </h1>
             <p className="text-[0.82rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-              친구의 고스트가 보드 위에서 같이 달려요
+              1:1 고스트 대결
             </p>
           </div>
           <ShareCard record={record} />
@@ -93,9 +94,9 @@ export default async function DuelPage({ params }: Props) {
       {/* 규칙 */}
       <ul className="flex w-full flex-col gap-1.5 px-1 text-[0.74rem] font-bold" style={{ color: "var(--ink-soft)" }}>
         {[
-          "상대가 그 시점에 채운 칸이 점으로 표시돼요. 숫자는 안 보여요.",
-          "클리어 시간이 더 빠르면 승리. 결과는 답장 링크로 돌려보낼 수 있어요.",
-          "진행 상태는 저장돼요. 앱을 오갔다 와도 이어서 붙습니다.",
+          "상대가 채운 칸은 점으로만 표시, 숫자는 비공개",
+          "클리어 시간이 빠른 쪽이 승리",
+          "결과는 답장 링크로 회신, 진행 상태는 자동 저장",
         ].map((line) => (
           <li key={line} className="flex items-start gap-2">
             <span className="checker mt-1 h-2 w-2 shrink-0" />
@@ -119,11 +120,11 @@ export default async function DuelPage({ params }: Props) {
         </a>
         {opponent ? (
           <a href={`/#free=${record.difficulty}`} className="text-[0.78rem] font-bold underline underline-offset-4" style={{ color: "var(--ink-faint)" }}>
-            새 문제로 붙기
+            새 문제로 대결
           </a>
         ) : (
           <Link href="/" className="text-[0.78rem] font-bold underline underline-offset-4" style={{ color: "var(--ink-faint)" }}>
-            그냥 홈으로
+            홈으로
           </Link>
         )}
       </div>

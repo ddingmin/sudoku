@@ -70,7 +70,7 @@ export default function DuelResultCard({ record, left, right }: { record: ShareR
       </div>
 
       <p className="mt-3.5 text-center text-[0.78rem] font-extrabold" style={{ color: "var(--ink-soft)" }}>
-        {outcome === "tie" ? "완전히 같은 시간이에요" : `${gapText(left.timeSec, right.timeSec)}로 ${outcome === "win" ? left.label : right.label} 승`}
+        {outcome === "tie" ? "동점" : `${gapText(left.timeSec, right.timeSec)}로 ${outcome === "win" ? left.label : right.label} 승`}
       </p>
     </div>
   );

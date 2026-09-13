@@ -143,11 +143,11 @@ export function countFilled(cells: number[]): number {
 
 // 진행 비교 한 줄
 export function paceLine(mine: number, ghost: number, elapsed: number, opponentSec: number): string {
-  if (elapsed > opponentSec) return `상대는 ${formatTime(opponentSec)}에 끝냈어요 — 끝까지 완주해요`;
+  if (elapsed > opponentSec) return `상대는 ${formatTime(opponentSec)}에 끝냈어요`;
   const d = mine - ghost;
-  if (d > 0) return `${d}칸 앞서고 있어요`;
-  if (d < 0) return `${-d}칸 뒤처졌어요`;
-  return "딱 붙어 있어요";
+  if (d > 0) return `${d}칸 앞서요`;
+  if (d < 0) return `${-d}칸 뒤처져요`;
+  return "같은 칸 수";
 }
 
 // ── 승패 ────────────────────────────────────────────────────
@@ -169,7 +169,7 @@ export function gapText(aSec: number, bSec: number): string {
   return s > 0 ? `${m}분 ${s}초 차` : `${m}분 차`;
 }
 
-export const OUTCOME_LABEL: Record<DuelOutcome, string> = { win: "이겼다!", lose: "아쉽다…", tie: "동점!" };
+export const OUTCOME_LABEL: Record<DuelOutcome, string> = { win: "이겼다!", lose: "졌다", tie: "동점" };
 
 // ── 공유 문구 ───────────────────────────────────────────────
 
@@ -179,7 +179,7 @@ function idOf(r: ShareRecord): string {
 
 // 도전장 텍스트 — 스탯은 OG가 보여주니 도발 한 줄 + 링크
 export function challengeText(r: ShareRecord, url?: string): string {
-  const lines = [`⚔️ 스도쿠 ${idOf(r)} · 1:1 대결`, `내 ${formatTime(r.timeSec)} 고스트랑 같은 문제로 붙어볼래? 👻`];
+  const lines = [`스도쿠 ${idOf(r)} · 1:1 대결`, `같은 문제로 붙자. 내 기록은 ${formatTime(r.timeSec)}`];
   if (url) lines.push(`👉 ${url}`);
   return lines.join("\n");
 }
@@ -187,15 +187,11 @@ export function challengeText(r: ShareRecord, url?: string): string {
 // 답장 텍스트 — 응답자 1인칭
 export function replyText(d: Required<DuelCode>, url?: string): string {
   const o = judge(d.record.timeSec, d.opponent.timeSec);
-  const verdict =
-    o === "win"
-      ? `${gapText(d.record.timeSec, d.opponent.timeSec)}로 내가 이겼다 😏`
-      : o === "lose"
-        ? `${gapText(d.record.timeSec, d.opponent.timeSec)}로 졌다… 리매치 각 🔥`
-        : "동점이라니 😳 한 판 더";
+  const gap = gapText(d.record.timeSec, d.opponent.timeSec);
+  const verdict = o === "win" ? `${gap}로 내가 이겼다` : o === "lose" ? `${gap}로 졌다. 다시 붙자` : "동점. 다시 붙자";
   const lines = [
-    `⚔️ 스도쿠 ${idOf(d.record)} · 대결 결과`,
-    `${formatTime(d.record.timeSec)} vs ${formatTime(d.opponent.timeSec)} — ${verdict}`,
+    `스도쿠 ${idOf(d.record)} · 대결 결과`,
+    `${formatTime(d.record.timeSec)} vs ${formatTime(d.opponent.timeSec)}, ${verdict}`,
   ];
   if (url) lines.push(`👉 ${url}`);
   return lines.join("\n");

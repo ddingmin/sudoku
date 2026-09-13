@@ -5,7 +5,7 @@ import { DIFFICULTY_LABEL, dailyNumber } from "@/lib/sudoku";
 import { DIFF_THEME } from "@/lib/palette";
 import { OG as C, OG_SIZE, Fallback, Flood, Sticker, ogFonts } from "@/lib/og";
 
-export const alt = "스도쿠 — 클리어 기록";
+export const alt = "스도쿠 클리어 기록";
 export const size = OG_SIZE;
 export const contentType = "image/png";
 

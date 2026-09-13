@@ -59,9 +59,9 @@ export default function RestoreClient() {
             없어요
           </h1>
           <p className="text-center text-[0.82rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-            링크가 잘렸거나 오래된 형식일 수 있어요.
+            링크가 잘렸거나 오래된 형식입니다.
             <br />
-            기록 화면에서 &quot;기록 옮기기&quot;로 다시 만들어 주세요.
+            기록 화면에서 링크를 다시 만들어 주세요.
           </p>
           <Link href="/" className="chunky chunky-press w-full py-4 text-center text-[1rem] font-extrabold" style={{ boxShadow: "var(--shadow-lg)" }}>
             홈으로
@@ -77,10 +77,10 @@ export default function RestoreClient() {
             </h1>
             <p className="text-[0.82rem] font-bold" style={{ color: "var(--ink-faint)" }}>
               {phase === "done"
-                ? "잠시 후 홈으로 이동해요"
+                ? "홈으로 이동합니다"
                 : localDays > 0
-                  ? `이 기기의 기록 ${localDays}일과 합쳐져요. 지워지는 건 없어요.`
-                  : "다른 기기에서 가져온 기록이에요"}
+                  ? `이 기기의 기록 ${localDays}일과 합쳐집니다`
+                  : "다른 기기의 기록"}
             </p>
           </div>
 
@@ -115,11 +115,11 @@ export default function RestoreClient() {
             className="chunky chunky-press w-full py-4 text-[1rem] font-extrabold disabled:opacity-60"
             style={{ background: "var(--primary)", color: "var(--on-primary)", boxShadow: "var(--shadow-lg)" }}
           >
-            {phase === "done" ? "완료!" : "이 기기에 불러오기"}
+            {phase === "done" ? "완료" : "이 기기에 불러오기"}
           </button>
           {phase === "preview" && (
             <Link href="/" className="text-[0.78rem] font-bold underline" style={{ color: "var(--ink-faint)" }}>
-              그냥 홈으로
+              홈으로
             </Link>
           )}
         </>

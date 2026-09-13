@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = record.daily
     ? `스도쿠 #${dailyNumber(record.dateKey)} · ${DIFFICULTY_LABEL[record.difficulty]} ${formatTime(record.timeSec)}`
     : `스도쿠 · ${DIFFICULTY_LABEL[record.difficulty]} ${formatTime(record.timeSec)}`;
-  const description = `실수 ${record.mistakes} · 힌트 ${record.hints}${record.streak > 1 ? ` · ${record.streak}일 연속` : ""} — ${shareHook(record)}`;
+  const description = `실수 ${record.mistakes} · 힌트 ${record.hints}${record.streak > 1 ? ` · ${record.streak}일 연속` : ""}. ${shareHook(record)}`;
   return {
     title,
     description,
@@ -52,7 +52,7 @@ export default async function SharePage({ params }: Props) {
           </span>
         </h1>
         <p className="text-[0.82rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-          친구가 오늘의 스도쿠를 이렇게 깼어요
+          친구의 클리어 기록
         </p>
       </div>
 

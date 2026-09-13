@@ -186,7 +186,7 @@ export default function Home() {
           <div className="flex items-center justify-center gap-2 pb-1">
             <span className="checker h-2 w-11" />
             <p className="text-center text-[0.65rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-              새로운 스도쿠는 자정에 열려요
+              매일 자정 새 문제
             </p>
             <span className="checker h-2 w-11" />
           </div>
@@ -198,7 +198,7 @@ export default function Home() {
             <Emblem size={44} />
           </motion.div>
           <p className="text-sm font-extrabold" style={{ color: "var(--ink-faint)" }}>
-            판 까는 중…
+            불러오는 중
           </p>
         </div>
       )}

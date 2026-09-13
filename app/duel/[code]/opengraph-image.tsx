@@ -6,7 +6,7 @@ import { DIFFICULTY_LABEL, dailyNumber } from "@/lib/sudoku";
 import { DIFF_THEME } from "@/lib/palette";
 import { OG as C, OG_SIZE, Fallback, Flood, Sticker, ogFonts } from "@/lib/og";
 
-export const alt = "스도쿠 — 1:1 대결";
+export const alt = "스도쿠 1:1 대결";
 export const size = OG_SIZE;
 export const contentType = "image/png";
 
@@ -60,7 +60,7 @@ export default async function OgImage({ params }: { params: Promise<{ code: stri
                 </div>
               ))}
               <div style={{ flex: 2.2, display: "flex", alignItems: "center", justifyContent: "center", background: T.primary, border: `3px solid ${C.ink}`, borderRadius: 14 }}>
-                <span style={{ fontSize: 26, fontWeight: 700, color: C.surface }}>같은 문제로 붙자 · 고스트 대결 →</span>
+                <span style={{ fontSize: 26, fontWeight: 700, color: C.surface }}>같은 문제로 붙자 →</span>
               </div>
             </div>
           </div>
@@ -114,7 +114,7 @@ export default async function OgImage({ params }: { params: Promise<{ code: stri
           </div>
           <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
             <span style={{ fontSize: 28, fontWeight: 700, color: C.ink }}>
-              {outcome === "tie" ? "완전히 같은 시간 😳" : `${gapText(record.timeSec, opponent.timeSec)}로 ${outcome === "win" ? "답장" : "도전장"} 승 — 너도 붙어볼래? →`}
+              {outcome === "tie" ? "동점 · 같은 문제로 도전 →" : `${gapText(record.timeSec, opponent.timeSec)}로 ${outcome === "win" ? "답장" : "도전장"} 승 · 같은 문제로 도전 →`}
             </span>
           </div>
         </div>
