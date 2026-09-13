@@ -16,6 +16,7 @@ interface CellProps {
   fxKind: FxEvent["kind"] | null;
   fxDelay: number;
   fxId: number;
+  ghost: number; // 고스트 대결: 0 없음 · 1 상대가 채움 · 2 상대 오답(정정 전)
   onSelect: (idx: number) => void;
 }
 
@@ -31,6 +32,7 @@ const Cell = memo(function Cell({
   fxKind,
   fxDelay,
   fxId,
+  ghost,
   onSelect,
 }: CellProps) {
   const r = rowOf(idx);
@@ -58,6 +60,14 @@ const Cell = memo(function Cell({
       className="relative flex items-center justify-center select-none"
     >
       <span className="absolute inset-0 transition-colors duration-150" style={{ background: bg }} />
+      {/* 고스트 마커: 상대가 채운 칸 — 숫자는 보이지 않고 위치만 */}
+      {ghost > 0 && value === 0 && (
+        <span
+          aria-hidden
+          className="anim-pop pointer-events-none absolute right-[9%] top-[9%] rounded-[3px]"
+          style={{ width: "24%", height: "24%", background: ghost === 2 ? "var(--danger)" : "var(--ink-faint)", opacity: 0.75 }}
+        />
+      )}
       {fxKind && fxKind !== "pop" && (
         <span
           key={`fx-${fxId}`}
@@ -109,10 +119,11 @@ interface BoardProps {
   solution: number[];
   selected: number | null;
   fx: FxEvent | null;
+  ghost?: number[] | null; // 고스트 대결 상대의 칸 상태 (lib/duel.ts ghostCells)
   onSelect: (idx: number) => void;
 }
 
-export default function Board({ values, notes, given, solution, selected, fx, onSelect }: BoardProps) {
+export default function Board({ values, notes, given, solution, selected, fx, ghost, onSelect }: BoardProps) {
   const selRow = selected !== null ? rowOf(selected) : -1;
   const selCol = selected !== null ? colOf(selected) : -1;
   const selBox = selected !== null ? boxOf(selected) : -1;
@@ -150,6 +161,7 @@ export default function Board({ values, notes, given, solution, selected, fx, on
             fxKind={fxHas ? fx!.kind : null}
             fxDelay={fxHas ? fx!.cells.get(idx)! : 0}
             fxId={fx?.id ?? 0}
+            ghost={ghost?.[idx] ?? 0}
             onSelect={onSelect}
           />
         );

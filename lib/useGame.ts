@@ -13,7 +13,7 @@ import {
   rowOf,
   todayKey,
 } from "./sudoku";
-import { Move } from "./encode";
+import { Move, ShareRecord } from "./encode";
 
 export const MAX_HINTS = 3;
 
@@ -46,7 +46,11 @@ export interface GameState {
   dateKey: string;
   elapsed: number;
   noteMode: boolean;
+  duel: ShareRecord | null; // 고스트 대결 상대 기록 (무브 t 복원됨)
 }
+
+// 첫 진입 의도: 해시(/#duel=… /#free=…)에서 온 요청. 없으면 저장 복원 → 기본 게임
+export type BootIntent = { duel: ShareRecord } | { free: Difficulty };
 
 function unitCells(kind: "row" | "col" | "box", n: number): number[] {
   const out: number[] = [];
@@ -74,12 +78,14 @@ interface SavedGame {
   noteMode: boolean;
   moves: Move[];
   savedAt: number;
+  duel?: ShareRecord; // 대결 슬롯이면 상대 기록
 }
 
 const SAVES_KEY = "sudoku:games:v1";
 const CURRENT_KEY = "sudoku:current:v1";
 
-function gameKey(daily: boolean, difficulty: Difficulty, dateKey: string, seed: number): string {
+function gameKey(daily: boolean, difficulty: Difficulty, dateKey: string, seed: number, duel = false): string {
+  if (duel) return `x:${difficulty}:${seed}`; // 대결은 같은 퍼즐의 일반 슬롯과 분리
   return daily ? `d:${difficulty}:${dateKey}` : `f:${seed}`;
 }
 
@@ -111,13 +117,14 @@ function setCurrentKey(key: string | null) {
 
 function isSaveValid(s: SavedGame | undefined): s is SavedGame {
   if (!s || !Array.isArray(s.values) || s.values.length !== 81) return false;
-  if (s.daily && s.dateKey !== todayKey()) return false; // 지난 데일리는 폐기
+  if (s.daily && !s.duel && s.dateKey !== todayKey()) return false; // 지난 데일리는 폐기 (대결 슬롯은 유지)
   return true;
 }
 
 export function useGame(
   initial: { difficulty: Difficulty; daily: boolean },
   onStart?: (fresh: boolean) => void,
+  boot?: () => BootIntent | null,
 ) {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [values, setValues] = useState<number[]>([]);
@@ -131,6 +138,7 @@ export function useGame(
   const [daily, setDaily] = useState(initial.daily);
   const [difficulty, setDifficulty] = useState(initial.difficulty);
   const [dateKey, setDateKey] = useState(() => todayKey());
+  const [duel, setDuel] = useState<ShareRecord | null>(null);
   const [fx, setFx] = useState<FxEvent | null>(null);
   const historyRef = useRef<HistoryEntry[]>([]);
   const fxIdRef = useRef(0);
@@ -139,6 +147,10 @@ export function useGame(
   const currentKeyRef = useRef<string | null>(null);
   const onStartRef = useRef(onStart);
   onStartRef.current = onStart;
+  const bootRef = useRef(boot);
+  bootRef.current = boot;
+  // 진입 의도는 한 번만 읽는다 — boot()이 해시를 지우므로 StrictMode의 이펙트 재실행에도 같은 결과가 나오도록
+  const intentRef = useRef<BootIntent | null | undefined>(undefined);
 
   const emitFx = useCallback((kind: FxEvent["kind"], cells: Map<number, number>) => {
     setFx({ id: ++fxIdRef.current, kind, cells });
@@ -159,11 +171,12 @@ export function useGame(
     setDifficulty(saved.difficulty);
     setDaily(saved.daily);
     setDateKey(saved.dateKey);
+    setDuel(saved.duel ?? null);
     setFx(null);
     historyRef.current = [];
     movesRef.current = [...saved.moves];
     elapsedRef.current = saved.elapsed;
-    currentKeyRef.current = gameKey(saved.daily, saved.difficulty, saved.dateKey, saved.seed);
+    currentKeyRef.current = gameKey(saved.daily, saved.difficulty, saved.dateKey, saved.seed, !!saved.duel);
     setCurrentKey(currentKeyRef.current);
     onStartRef.current?.(false);
   }, []);
@@ -192,6 +205,7 @@ export function useGame(
       setDifficulty(diff);
       setDaily(isDaily);
       setDateKey(today);
+      setDuel(null);
       setFx(null);
       historyRef.current = [];
       movesRef.current = [];
@@ -203,8 +217,54 @@ export function useGame(
     [applySave],
   );
 
+  // 고스트 대결 시작: 상대 기록의 퍼즐(같은 시드)을 깔고 상대 무브를 고스트로 붙인다.
+  // 같은 대결을 진행 중이었으면 이어서.
+  const newDuel = useCallback(
+    (opponent: ShareRecord) => {
+      if (opponent.seed === undefined || !opponent.moves?.length) return;
+      const key = gameKey(opponent.daily, opponent.difficulty, opponent.dateKey, opponent.seed, true);
+      const saved = loadSaves()[key];
+      if (isSaveValid(saved) && saved.duel) {
+        applySave(saved);
+        return;
+      }
+      const p = generatePuzzle(opponent.difficulty, opponent.seed);
+      setPuzzle(p);
+      setValues([...p.puzzle]);
+      setNotes(new Array(81).fill(0));
+      setSelected(null);
+      setMistakes(0);
+      setHintsUsed(0);
+      setStatus("playing");
+      setElapsed(0);
+      setNoteMode(false);
+      setDifficulty(opponent.difficulty);
+      setDaily(opponent.daily);
+      setDateKey(opponent.dateKey);
+      setDuel(opponent);
+      setFx(null);
+      historyRef.current = [];
+      movesRef.current = [];
+      elapsedRef.current = 0;
+      currentKeyRef.current = key;
+      setCurrentKey(key);
+      onStartRef.current?.(true);
+    },
+    [applySave],
+  );
+
   // 초기 퍼즐: 진행 중이던 게임이 있으면 복원, 없으면 새 게임 (클라이언트 전용)
   useEffect(() => {
+    if (intentRef.current === undefined) intentRef.current = bootRef.current?.() ?? null;
+    const intent = intentRef.current;
+    if (intent && "duel" in intent) {
+      newDuel(intent.duel);
+      return;
+    }
+    if (intent && "free" in intent) {
+      newGame(intent.free, false);
+      return;
+    }
     try {
       const cur = localStorage.getItem(CURRENT_KEY);
       const saved = cur ? loadSaves()[cur] : undefined;
@@ -235,6 +295,7 @@ export function useGame(
       noteMode,
       moves: movesRef.current,
       savedAt: Date.now(),
+      duel: duel ?? undefined,
     };
     writeSaves(saves);
   };
@@ -455,6 +516,7 @@ export function useGame(
         dateKey,
         elapsed,
         noteMode,
+        duel,
       }
     : null;
 
@@ -472,5 +534,6 @@ export function useGame(
     hint,
     toggleNoteMode: () => setNoteMode((m) => !m),
     newGame,
+    newDuel,
   };
 }

@@ -108,9 +108,10 @@ export class BitReader {
   }
 }
 
-export function encodeRecord(r: ShareRecord): string {
+// 기록 본문을 비트열로. 무브가 마지막에 오므로 개수는 읽는 쪽에서 남은 비트로 추정한다.
+// 공유 코드(v3)와 대결 코드(lib/duel.ts)가 공용으로 사용 — 앞에 다른 필드를 붙여도 6비트 패딩(<8)이라 안전
+export function writeRecordBits(w: BitWriter, r: ShareRecord) {
   const hasMoves = r.seed !== undefined && r.moves !== undefined && r.moves.length > 0;
-  const w = new BitWriter();
   w.write(DIFFICULTIES.indexOf(r.difficulty), 2);
   w.write(r.daily ? 1 : 0, 1);
   w.write(r.best ? 1 : 0, 1);
@@ -132,6 +133,11 @@ export function encodeRecord(r: ShareRecord): string {
     if (h.lastSpurt) w.write(cap(h.lastSpurt.sec, BITS.sec), BITS.sec);
     for (const m of r.moves!) w.write(m.k * 81 + m.i, BITS.move);
   }
+}
+
+export function encodeRecord(r: ShareRecord): string {
+  const w = new BitWriter();
+  writeRecordBits(w, r);
   return V3_PREFIX + w.toString();
 }
 
@@ -146,8 +152,8 @@ function dailySeed(dateKey: string, difficulty: Difficulty): number {
   return h >>> 0;
 }
 
-function decodeV3(code: string): ShareRecord | null {
-  const rd = new BitReader(code.slice(V3_PREFIX.length));
+// writeRecordBits의 역. 형식이 어긋나면 null (범위 밖 값·무브 개수 이상)
+export function readRecordBits(rd: BitReader): ShareRecord | null {
   const difficulty = DIFFICULTIES[rd.read(2)];
   const daily = rd.flag();
   const best = rd.flag();
@@ -180,6 +186,10 @@ function decodeV3(code: string): ShareRecord | null {
   record.moves = moves;
   record.highlights = { longestThink, lastSpurt, errorCells };
   return record;
+}
+
+function decodeV3(code: string): ShareRecord | null {
+  return readRecordBits(new BitReader(code.slice(V3_PREFIX.length)));
 }
 
 // v1/v2: "|" 구분 필드 전체를 base64url로 감싼 형식

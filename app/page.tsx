@@ -1,24 +1,45 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useGame } from "@/lib/useGame";
-import { Difficulty, colOf, rowOf } from "@/lib/sudoku";
+import { BootIntent, useGame } from "@/lib/useGame";
+import { DIFFICULTIES, Difficulty, colOf, rowOf, todayKey } from "@/lib/sudoku";
 import { Stats, loadStats, recordClear, recordStart } from "@/lib/stats";
 import { ShareRecord } from "@/lib/encode";
+import { countFilled, decodeDuel, ghostCells } from "@/lib/duel";
 import Board from "@/components/Board";
 import NumberPad from "@/components/NumberPad";
 import Controls from "@/components/Controls";
 import Header from "@/components/Header";
 import WinModal from "@/components/WinModal";
 import StatsPanel from "@/components/StatsPanel";
+import DuelBar from "@/components/DuelBar";
 import { Emblem } from "@/components/ShareCard";
 
+// 해시로 들어온 진입 의도 (/#duel=<대결 코드> · /#free=<난이도>). 읽고 나면 주소에서 지운다
+function readBootIntent(): BootIntent | null {
+  const h = new URLSearchParams(location.hash.slice(1));
+  const duelCode = h.get("duel");
+  const free = h.get("free");
+  if (!duelCode && !free) return null;
+  history.replaceState(null, "", location.pathname);
+  if (duelCode) {
+    const d = decodeDuel(duelCode);
+    if (d?.record.moves?.length && d.record.seed !== undefined) return { duel: d.record };
+  }
+  if (free && (DIFFICULTIES as string[]).includes(free)) return { free: free as Difficulty };
+  return null;
+}
+
 export default function Home() {
-  const game = useGame({ difficulty: "normal", daily: true }, (fresh) => {
-    // 새 게임만 플레이 수에 집계 (복원된 게임은 제외)
-    setStats(fresh ? recordStart() : loadStats());
-  });
+  const game = useGame(
+    { difficulty: "normal", daily: true },
+    (fresh) => {
+      // 새 게임만 플레이 수에 집계 (복원된 게임은 제외)
+      setStats(fresh ? recordStart() : loadStats());
+    },
+    readBootIntent,
+  );
   const { state, fx, remaining, puzzleGrid, seed, getMoves, select, input, erase, undo, hint, toggleNoteMode, newGame } = game;
 
   const [winRecord, setWinRecord] = useState<ShareRecord | null>(null);
@@ -35,6 +56,23 @@ export default function Home() {
     [newGame],
   );
 
+  // 고스트: 경과 시간 시점에 상대가 채운 칸
+  const ghost = useMemo(
+    () => (state?.duel?.moves ? ghostCells(state.duel.moves, state.elapsed) : null),
+    [state?.duel, state?.elapsed],
+  );
+  const progress = useMemo(() => {
+    if (!state) return null;
+    let mine = 0;
+    let total = 0;
+    for (let i = 0; i < 81; i++) {
+      if (state.given[i]) continue;
+      total++;
+      if (state.values[i] === state.solution[i]) mine++;
+    }
+    return { mine, total };
+  }, [state]);
+
   // 클리어 → 기록 저장 → 웨이브가 끝난 뒤 모달
   useEffect(() => {
     if (state?.status !== "won" || recordedRef.current) return;
@@ -45,13 +83,14 @@ export default function Home() {
       mistakes: state.mistakes,
       hints: state.hintsUsed,
       dateKey: state.dateKey,
-      daily: state.daily,
+      // 대결로 받은 지난 데일리는 잔디에 소급하지 않는다 — 오늘 퍼즐일 때만 데일리로 집계
+      daily: state.daily && state.dateKey === todayKey(),
       finishedAt: Date.now(),
       seed,
       moves: getMoves(),
     });
     setStats(s);
-    const t = setTimeout(() => setWinRecord(record), 1500);
+    const t = setTimeout(() => setWinRecord({ ...record, daily: state.daily }), 1500);
     return () => clearTimeout(t);
   }, [state?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -99,6 +138,7 @@ export default function Home() {
             dateKey={state.dateKey}
             elapsed={state.elapsed}
             mistakes={state.mistakes}
+            duel={!!state.duel}
             onNewGame={startNewGame}
             onOpenStats={() => {
               setStats(loadStats());
@@ -106,13 +146,17 @@ export default function Home() {
             }}
           />
 
+          {state.duel && ghost && progress && (
+            <DuelBar opponent={state.duel} mine={progress.mine} ghost={countFilled(ghost)} total={progress.total} elapsed={state.elapsed} />
+          )}
+
           <div className="flex w-full flex-1 items-center">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
               className="mx-auto w-full"
-              style={{ maxWidth: "min(100%, calc(100dvh - 330px))" }}
+              style={{ maxWidth: `min(100%, calc(100dvh - ${state.duel ? 430 : 330}px))` }}
             >
               <Board
                 values={state.values}
@@ -121,6 +165,7 @@ export default function Home() {
                 solution={state.solution}
                 selected={state.selected}
                 fx={fx}
+                ghost={ghost}
                 onSelect={select}
               />
             </motion.div>
@@ -163,6 +208,7 @@ export default function Home() {
           <WinModal
             record={winRecord}
             puzzle={puzzleGrid}
+            opponent={state?.duel}
             onNewGame={() => startNewGame(state!.difficulty, false)}
             onClose={() => setWinRecord(null)}
           />

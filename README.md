@@ -10,6 +10,7 @@
 - **풀이 리캡** — 클리어하면 내가 채운 순서를 타임랩스로 재생하고 "한 칸에서 1분 35초를 고민했어요" 같은 하이라이트를 뽑아줍니다.
 - **자랑하기** — 기록 카드 PNG, 풀이 타임랩스 MP4(브라우저에서 바로 인코딩), Wordle 스타일 텍스트, 공유 링크 중 골라서 공유합니다.
 - **공유 링크** — 서버 저장 없이 URL 안에 기록과 풀이 순서를 통째로 담습니다(약 80~100자). 링크를 열면 친구 기록의 리캡이 재생되고, 카톡·X·슬랙 미리보기용 OG 카드가 자동 생성됩니다.
+- **1:1 고스트 대결** — 클리어 후 "대결 신청" 링크를 보내면 친구가 같은 문제를 풀면서 내가 그 시점에 채운 칸을 고스트로 봅니다(숫자는 안 보임). 클리어 시간으로 승패가 나고, 결과는 답장 링크로 돌려보냅니다. 역시 서버 없이 링크만 오갑니다. 설계는 [docs/duel.md](docs/duel.md).
 - **게임 도구** — 메모 모드, 되돌리기, 힌트, 숫자별 남은 개수, 키보드 입력. 진행 상태는 자동 저장되어 앱을 오갔다 와도 이어서 풉니다.
 - **기록** — 날짜별 클리어 잔디, 연속 클리어 스트릭, 난이도별 베스트, 완주율. 모두 기기에만 저장됩니다(로그인 없음).
 - **기록 옮기기** — 기록 전체를 링크 하나에 담아 다른 기기에서 열면 합쳐집니다. 서버 저장 없이 기기 이동과 백업을 해결합니다.
@@ -24,7 +25,7 @@ npm run dev        # http://localhost:3000
 
 ```bash
 npm run typecheck  # 타입 검사
-npm run verify     # 퍼즐 생성기 유일해 + 공유 코드·백업 코드 라운드트립 검증
+npm run verify     # 퍼즐 생성기 유일해 + 공유·백업·대결 코드 라운드트립 검증
 npm run build
 ```
 
@@ -33,16 +34,18 @@ npm run build
 ## 구조
 
 ```
-app/                  Next.js App Router (메인 게임, /share/[code] 공유 랜딩 + OG 이미지, /restore 기록 불러오기)
+app/                  Next.js App Router (메인 게임, /share/[code] 공유 랜딩 + OG, /duel/[code] 대결 도전장·결과 + OG, /restore 기록 불러오기)
 components/           보드·넘버패드·승리 모달·공유 카드 등 UI
 lib/sudoku.ts         퍼즐 생성기 (시드 기반, 유일해 검증)
 lib/useGame.ts        게임 상태·입력·저장
 lib/encode.ts         공유 코드 인코딩/디코딩 (비트 패킹, 구버전 링크 호환)
+lib/duel.ts           1:1 고스트 대결 코드 (체크포인트 시간 복원, 고스트 진행, 승패)
 lib/backup.ts         기록 백업 코드 (/restore#code, 기기 이동용)
 lib/stats.ts          기록 저장 (localStorage), 잔디·스트릭 파생, 병합
 lib/recap.ts          풀이 로그 → 하이라이트
 lib/shareImage.ts     공유 카드 PNG (Canvas)
 lib/shareVideo.ts     풀이 타임랩스 MP4 (WebCodecs + mp4-muxer)
+lib/og.tsx            OG 이미지 공용 (폰트·체커·플러드 프레임)
 scripts/              검증 스크립트, Playwright E2E
 DESIGN.md             디자인 시스템 ("키치 팝") 토큰과 규칙
 ```
