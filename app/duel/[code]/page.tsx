@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatTime } from "@/lib/encode";
-import { decodeDuel, gapText, judge } from "@/lib/duel";
+import { decodeDuel, verdictText } from "@/lib/duel";
 import { DIFFICULTY_LABEL, dailyNumber } from "@/lib/sudoku";
 import ShareCard, { Emblem } from "@/components/ShareCard";
 import ShareRecap from "@/components/ShareRecap";
@@ -20,10 +20,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = d.opponent
     ? `스도쿠 ${id} 대결 결과 · ${formatTime(d.record.timeSec)} vs ${formatTime(d.opponent.timeSec)}`
     : `스도쿠 ${id} · 1:1 대결 신청 ${formatTime(d.record.timeSec)}`;
-  const outcome = d.opponent ? judge(d.record.timeSec, d.opponent.timeSec) : null;
   const description = d.opponent
-    ? `${outcome === "tie" ? "동점" : `${gapText(d.record.timeSec, d.opponent.timeSec)}로 ${outcome === "win" ? "답장" : "도전장"} 승`} · 같은 문제로 도전 가능`
-    : `같은 문제로 1:1 대결. 상대 기록 ${formatTime(d.record.timeSec)} · 실수 ${d.record.mistakes} · 힌트 ${d.record.hints}`;
+    ? `${verdictText(d.record.timeSec, d.opponent.timeSec, "답장 기록이", "도전장 기록이")}. 같은 문제를 풀어볼 수 있어요`
+    : `친구 기록 ${formatTime(d.record.timeSec)} · 실수 ${d.record.mistakes} · 힌트 ${d.record.hints}. 같은 문제로 붙어볼래?`;
   return {
     title,
     description,
@@ -61,13 +60,13 @@ export default async function DuelPage({ params }: Props) {
               </span>
             </h1>
             <p className="text-[0.82rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-              1:1 고스트 대결
+              같은 문제를 푼 두 기록이에요
             </p>
           </div>
           <DuelResultCard
             record={record}
-            left={{ label: "도전장", timeSec: opponent.timeSec, mistakes: opponent.mistakes, hints: opponent.hints }}
-            right={{ label: "답장", timeSec: record.timeSec, mistakes: record.mistakes, hints: record.hints }}
+            left={{ label: "도전장", subject: "도전장 기록이", timeSec: opponent.timeSec, mistakes: opponent.mistakes, hints: opponent.hints }}
+            right={{ label: "답장", subject: "답장 기록이", timeSec: record.timeSec, mistakes: record.mistakes, hints: record.hints }}
           />
         </>
       ) : (
@@ -82,7 +81,7 @@ export default async function DuelPage({ params }: Props) {
               </span>
             </h1>
             <p className="text-[0.82rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-              1:1 고스트 대결
+              친구가 풀던 속도를 보면서 같은 문제를 풀어요
             </p>
           </div>
           <ShareCard record={record} />
@@ -94,9 +93,9 @@ export default async function DuelPage({ params }: Props) {
       {/* 규칙 */}
       <ul className="flex w-full flex-col gap-1.5 px-1 text-[0.74rem] font-bold" style={{ color: "var(--ink-soft)" }}>
         {[
-          "상대가 채운 칸은 점으로만 표시, 숫자는 비공개",
-          "클리어 시간이 빠른 쪽이 승리",
-          "결과는 답장 링크로 회신, 진행 상태는 자동 저장",
+          "친구가 채운 칸이 점으로 표시돼요. 숫자는 보이지 않아요.",
+          "친구보다 빨리 클리어하면 이겨요.",
+          "다 풀면 결과를 링크로 답장할 수 있어요.",
         ].map((line) => (
           <li key={line} className="flex items-start gap-2">
             <span className="checker mt-1 h-2 w-2 shrink-0" />
@@ -120,7 +119,7 @@ export default async function DuelPage({ params }: Props) {
         </a>
         {opponent ? (
           <a href={`/#free=${record.difficulty}`} className="text-[0.78rem] font-bold underline underline-offset-4" style={{ color: "var(--ink-faint)" }}>
-            새 문제로 대결
+            새 문제로 다시 붙기
           </a>
         ) : (
           <Link href="/" className="text-[0.78rem] font-bold underline underline-offset-4" style={{ color: "var(--ink-faint)" }}>

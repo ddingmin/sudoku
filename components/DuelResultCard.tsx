@@ -1,10 +1,11 @@
 // 대결 결과 카드 — 양쪽 기록을 나란히. WinModal / 결과 랜딩 공용 (서버 렌더 가능)
 import { ShareRecord, formatTime } from "@/lib/encode";
 import { DIFFICULTY_LABEL, dailyNumber } from "@/lib/sudoku";
-import { gapText, judge } from "@/lib/duel";
+import { judge, verdictText } from "@/lib/duel";
 
 export interface DuelSide {
-  label: string; // "나" / "상대" / "도전장" / "답장"
+  label: string; // "나" / "친구" / "도전장" / "답장"
+  subject: string; // 승패 문장의 주어: "내 기록이" / "친구 기록이" / "도전장 기록이"
   timeSec: number;
   mistakes: number;
   hints: number;
@@ -70,7 +71,7 @@ export default function DuelResultCard({ record, left, right }: { record: ShareR
       </div>
 
       <p className="mt-3.5 text-center text-[0.78rem] font-extrabold" style={{ color: "var(--ink-soft)" }}>
-        {outcome === "tie" ? "동점" : `${gapText(left.timeSec, right.timeSec)}로 ${outcome === "win" ? left.label : right.label} 승`}
+        {verdictText(left.timeSec, right.timeSec, left.subject, right.subject)}
       </p>
     </div>
   );

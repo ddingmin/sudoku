@@ -210,8 +210,8 @@ export default function WinModal({ record, puzzle, opponent, onNewGame, onClose 
         {opponent ? (
           <DuelResultCard
             record={record}
-            left={{ label: "나", timeSec: record.timeSec, mistakes: record.mistakes, hints: record.hints }}
-            right={{ label: "상대", timeSec: opponent.timeSec, mistakes: opponent.mistakes, hints: opponent.hints }}
+            left={{ label: "나", subject: "내 기록이", timeSec: record.timeSec, mistakes: record.mistakes, hints: record.hints }}
+            right={{ label: "친구", subject: "친구 기록이", timeSec: opponent.timeSec, mistakes: opponent.mistakes, hints: opponent.hints }}
           />
         ) : (
           <ShareCard record={record} />
@@ -228,7 +228,7 @@ export default function WinModal({ record, puzzle, opponent, onNewGame, onClose 
               <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m3 11 18-8-8 18-2-8-8-2Z" />
               </svg>
-              결과 답장 보내기
+              친구에게 결과 보내기
             </button>
           ) : (
           <button
@@ -274,7 +274,7 @@ export default function WinModal({ record, puzzle, opponent, onNewGame, onClose 
                 <path d="M10 14l-6 6" />
                 <path d="M3 3l8.5 8.5" />
               </svg>
-              1:1 대결 신청
+              친구에게 대결 신청
             </button>
           )}
           <div className="flex gap-2.5">

@@ -86,7 +86,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
             className="chunky-sm chunky-press flex items-center gap-1.5 rounded-full! py-2 pl-3.5 pr-2.5 text-[0.78rem] font-extrabold"
             style={{ color: "var(--ink)" }}
           >
-            {duel ? "고스트 대결" : daily ? "오늘의 스도쿠" : "자유 스도쿠"}
+            {duel ? "친구와 대결" : daily ? "오늘의 스도쿠" : "자유 스도쿠"}
             <span style={{ color: "var(--primary)" }}>{DIFFICULTY_LABEL[difficulty]}</span>
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" strokeWidth="3" strokeLinecap="round">
               <path d="m6 9 6 6 6-6" />

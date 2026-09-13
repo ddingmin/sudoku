@@ -33,7 +33,7 @@ async function main() {
   await a.waitForTimeout(800);
   await solve(a, puzzle, solution, 12); // 중간중간 멈춰 시간이 쌓이게
   await a.waitForTimeout(2200);
-  await a.getByRole("button", { name: "1:1 대결 신청" }).click();
+  await a.getByRole("button", { name: "친구에게 대결 신청" }).click();
   await a.waitForTimeout(500);
   const clipA = await a.evaluate(() => navigator.clipboard.readText());
   console.log("A 도전장:\n" + clipA);
@@ -58,7 +58,7 @@ async function main() {
   await b.waitForURL((u) => u.origin === BASE && u.pathname === "/");
   await b.waitForTimeout(1200);
   console.log("받기 후 URL:", b.url(), "| current:", await b.evaluate(() => localStorage.getItem("sudoku:current:v1")));
-  const bar = b.getByLabel("고스트 대결 진행");
+  const bar = b.getByLabel("대결 진행");
   if (!(await bar.isVisible())) {
     await b.screenshot({ path: `${OUT}/duel-b-fail.png` });
     throw new Error("DuelBar 없음");
@@ -71,7 +71,7 @@ async function main() {
   // 새로고침해도 대결이 이어지는지
   await b.reload({ waitUntil: "networkidle" });
   await b.waitForTimeout(900);
-  if (!(await b.getByLabel("고스트 대결 진행").isVisible())) throw new Error("새로고침 후 DuelBar 사라짐");
+  if (!(await b.getByLabel("대결 진행").isVisible())) throw new Error("새로고침 후 DuelBar 사라짐");
   console.log("새로고침 후 대결 유지 OK");
 
   // B 클리어 (빠르게 → 승리)
@@ -80,7 +80,7 @@ async function main() {
   await b.screenshot({ path: `${OUT}/duel-b-win.png` });
   const headline = await b.locator("p.font-display").first().innerText();
   console.log("B 결과 헤드라인:", headline);
-  await b.getByRole("button", { name: "결과 답장 보내기" }).click();
+  await b.getByRole("button", { name: "친구에게 결과 보내기" }).click();
   await b.waitForTimeout(500);
   const clipB = await b.evaluate(() => navigator.clipboard.readText());
   console.log("B 답장:\n" + clipB);

@@ -143,11 +143,12 @@ export function countFilled(cells: number[]): number {
 
 // 진행 비교 한 줄
 export function paceLine(mine: number, ghost: number, elapsed: number, opponentSec: number): string {
-  if (elapsed > opponentSec) return `상대는 ${formatTime(opponentSec)}에 끝냈어요`;
+  if (elapsed > opponentSec) return "친구는 이미 다 풀었어요";
+  if (mine === 0 && ghost === 0) return "이제 시작이에요";
   const d = mine - ghost;
-  if (d > 0) return `${d}칸 앞서요`;
-  if (d < 0) return `${-d}칸 뒤처져요`;
-  return "같은 칸 수";
+  if (d > 0) return `친구보다 ${d}칸 앞서요`;
+  if (d < 0) return `친구보다 ${-d}칸 뒤에 있어요`;
+  return "친구와 같은 칸 수예요";
 }
 
 // ── 승패 ────────────────────────────────────────────────────
@@ -160,13 +161,21 @@ export function judge(mineSec: number, opponentSec: number): DuelOutcome {
   return "tie";
 }
 
+// 두 기록의 시간 차 ("1분 12초"). 0이면 빈 문자열
 export function gapText(aSec: number, bSec: number): string {
   const d = Math.abs(aSec - bSec);
-  if (d === 0) return "동시";
-  if (d < 60) return `${d}초 차`;
+  if (d === 0) return "";
+  if (d < 60) return `${d}초`;
   const m = Math.floor(d / 60);
   const s = d % 60;
-  return s > 0 ? `${m}분 ${s}초 차` : `${m}분 차`;
+  return s > 0 ? `${m}분 ${s}초` : `${m}분`;
+}
+
+// 승패 한 문장: "내 기록이 1분 12초 빨라요" / "같은 시간이에요". subject는 "내 기록이", "친구 기록이", "답장 기록이" 등
+export function verdictText(aSec: number, bSec: number, aSubject: string, bSubject: string): string {
+  const o = judge(aSec, bSec);
+  if (o === "tie") return "같은 시간이에요";
+  return `${o === "win" ? aSubject : bSubject} ${gapText(aSec, bSec)} 빨라요`;
 }
 
 export const OUTCOME_LABEL: Record<DuelOutcome, string> = { win: "이겼다!", lose: "졌다", tie: "동점" };
@@ -179,7 +188,7 @@ function idOf(r: ShareRecord): string {
 
 // 도전장 텍스트 — 스탯은 OG가 보여주니 도발 한 줄 + 링크
 export function challengeText(r: ShareRecord, url?: string): string {
-  const lines = [`스도쿠 ${idOf(r)} · 1:1 대결`, `같은 문제로 붙자. 내 기록은 ${formatTime(r.timeSec)}`];
+  const lines = [`스도쿠 ${idOf(r)} · 1:1 대결`, `내 기록 ${formatTime(r.timeSec)}, 같은 문제로 붙어볼래?`];
   if (url) lines.push(`👉 ${url}`);
   return lines.join("\n");
 }
@@ -188,11 +197,8 @@ export function challengeText(r: ShareRecord, url?: string): string {
 export function replyText(d: Required<DuelCode>, url?: string): string {
   const o = judge(d.record.timeSec, d.opponent.timeSec);
   const gap = gapText(d.record.timeSec, d.opponent.timeSec);
-  const verdict = o === "win" ? `${gap}로 내가 이겼다` : o === "lose" ? `${gap}로 졌다. 다시 붙자` : "동점. 다시 붙자";
-  const lines = [
-    `스도쿠 ${idOf(d.record)} · 대결 결과`,
-    `${formatTime(d.record.timeSec)} vs ${formatTime(d.opponent.timeSec)}, ${verdict}`,
-  ];
+  const verdict = o === "win" ? `${gap} 차이로 내가 이겼다` : o === "lose" ? `${gap} 차이로 졌다. 한 판 더 붙자` : "완전히 같은 시간. 한 판 더 붙자";
+  const lines = [`스도쿠 ${idOf(d.record)} · 대결 결과`, `${formatTime(d.record.timeSec)} vs ${formatTime(d.opponent.timeSec)}, ${verdict}`];
   if (url) lines.push(`👉 ${url}`);
   return lines.join("\n");
 }

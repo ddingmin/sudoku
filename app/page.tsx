@@ -146,17 +146,13 @@ export default function Home() {
             }}
           />
 
-          {state.duel && ghost && progress && (
-            <DuelBar opponent={state.duel} mine={progress.mine} ghost={countFilled(ghost)} total={progress.total} elapsed={state.elapsed} />
-          )}
-
           <div className="flex w-full flex-1 items-center">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
               className="mx-auto w-full"
-              style={{ maxWidth: `min(100%, calc(100dvh - ${state.duel ? 430 : 330}px))` }}
+              style={{ maxWidth: "min(100%, calc(100dvh - 330px))" }}
             >
               <Board
                 values={state.values}
@@ -183,13 +179,18 @@ export default function Home() {
             <NumberPad remaining={remaining} noteMode={state.noteMode} onInput={input} />
           </div>
 
-          <div className="flex items-center justify-center gap-2 pb-1">
-            <span className="checker h-2 w-11" />
-            <p className="text-center text-[0.65rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-              매일 자정 새 문제
-            </p>
-            <span className="checker h-2 w-11" />
-          </div>
+          {/* 대결 중엔 푸터 자리에 진행 스트립 — 보드 높이 예산은 일반 모드와 동일 */}
+          {state.duel && ghost && progress ? (
+            <DuelBar opponent={state.duel} mine={progress.mine} ghost={countFilled(ghost)} total={progress.total} elapsed={state.elapsed} />
+          ) : (
+            <div className="flex items-center justify-center gap-2 pb-1">
+              <span className="checker h-2 w-11" />
+              <p className="text-center text-[0.65rem] font-bold" style={{ color: "var(--ink-faint)" }}>
+                매일 자정 새 문제
+              </p>
+              <span className="checker h-2 w-11" />
+            </div>
+          )}
         </>
       ) : (
         // 퍼즐 생성 중 스켈레톤
