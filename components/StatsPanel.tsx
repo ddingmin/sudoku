@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { DIFFICULTIES, DIFFICULTY_LABEL } from "@/lib/sudoku";
 import { Stats, clearedDayCount, streakInfo } from "@/lib/stats";
@@ -12,10 +11,11 @@ import { challengeText, encodeDuel, isChallengeable } from "@/lib/duel";
 
 interface StatsPanelProps {
   stats: Stats;
+  onOpenRecord: (record: ShareRecord) => void; // 최근 게임 행 → 게임 종료 화면과 같은 결과 모달
   onClose: () => void;
 }
 
-export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
+export default function StatsPanel({ stats, onOpenRecord, onClose }: StatsPanelProps) {
   const [toast, setToast] = useState<string | null>(null);
   const { current: streak, max: maxStreak } = streakInfo(stats.days);
   const dayCount = clearedDayCount(stats);
@@ -175,8 +175,8 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
               };
               return (
                 <li key={i} className="chunky-sm flex items-center justify-between gap-2 pr-4" style={{ boxShadow: "var(--shadow-sm)" }}>
-                  {/* 행 클릭 → 결과 페이지 (리플레이 포함) */}
-                  <Link href={`/share/${encodeRecord(record)}`} className="min-w-0 flex-1 py-3 pl-4">
+                  {/* 행 클릭 → 게임 종료 화면과 동일한 결과 모달 (리캡·공유·대결 신청) */}
+                  <button type="button" onClick={() => onOpenRecord(record)} className="min-w-0 flex-1 py-3 pl-4 text-left">
                     <p className="text-[0.8rem] font-extrabold">
                       {DIFFICULTY_LABEL[h.difficulty]}
                       {record.best && (
@@ -211,7 +211,7 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
                         {h.hints}
                       </span>
                     </p>
-                  </Link>
+                  </button>
                   {isChallengeable(record) && (
                     <button
                       onClick={() => shareChallenge(record)}

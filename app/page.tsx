@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BootIntent, useGame } from "@/lib/useGame";
-import { DIFFICULTIES, Difficulty, colOf, rowOf, todayKey } from "@/lib/sudoku";
+import { DIFFICULTIES, Difficulty, colOf, generatePuzzle, rowOf, todayKey } from "@/lib/sudoku";
 import { Stats, loadStats, recordClear, recordStart } from "@/lib/stats";
 import { ShareRecord } from "@/lib/encode";
 import { countFilled, decodeDuel, ghostCells } from "@/lib/duel";
@@ -45,6 +45,16 @@ export default function Home() {
   const [winRecord, setWinRecord] = useState<ShareRecord | null>(null);
   const [statsOpen, setStatsOpen] = useState(false);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [reviewRecord, setReviewRecord] = useState<ShareRecord | null>(null); // 기록 화면에서 고른 지난 판
+  // 지난 판의 주어진 숫자 그리드 — 시드로 재생성 (리캡 리플레이용)
+  const reviewPuzzle = useMemo(() => {
+    if (!reviewRecord || reviewRecord.seed === undefined) return null;
+    try {
+      return generatePuzzle(reviewRecord.difficulty, reviewRecord.seed).puzzle;
+    } catch {
+      return null;
+    }
+  }, [reviewRecord]);
   const recordedRef = useRef(false);
 
   const startNewGame = useCallback(
@@ -97,7 +107,7 @@ export default function Home() {
   // 키보드 입력
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!state || winRecord || statsOpen) return;
+      if (!state || winRecord || statsOpen || reviewRecord) return;
       if (e.key >= "1" && e.key <= "9") {
         input(Number(e.key));
       } else if (e.key === "Backspace" || e.key === "Delete") {
@@ -123,7 +133,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [state, winRecord, statsOpen, input, erase, toggleNoteMode, hint, undo, select]);
+  }, [state, winRecord, statsOpen, reviewRecord, input, erase, toggleNoteMode, hint, undo, select]);
 
   return (
     <main
@@ -214,7 +224,17 @@ export default function Home() {
             onClose={() => setWinRecord(null)}
           />
         )}
-        {statsOpen && stats && <StatsPanel stats={stats} onClose={() => setStatsOpen(false)} />}
+        {statsOpen && stats && <StatsPanel stats={stats} onOpenRecord={setReviewRecord} onClose={() => setStatsOpen(false)} />}
+        {reviewRecord && (
+          <WinModal
+            key="review"
+            mode="review"
+            record={reviewRecord}
+            puzzle={reviewPuzzle}
+            onNewGame={() => {}}
+            onClose={() => setReviewRecord(null)}
+          />
+        )}
       </AnimatePresence>
     </main>
   );

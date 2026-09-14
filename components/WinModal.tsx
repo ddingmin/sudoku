@@ -17,6 +17,7 @@ interface WinModalProps {
   record: ShareRecord;
   puzzle?: number[] | null; // 주어진 숫자 그리드 (리캡 리플레이용)
   opponent?: ShareRecord | null; // 고스트 대결이었으면 상대 기록
+  mode?: "win" | "review"; // review = 지난 기록 다시 보기 (기록 화면에서 진입). 컨페티·"한 판 더" 없음, 헤드라인만 다름
   onNewGame: () => void;
   onClose: () => void;
 }
@@ -34,14 +35,14 @@ function fireConfetti(primary: string) {
   );
 }
 
-export default function WinModal({ record, puzzle, opponent, onNewGame, onClose }: WinModalProps) {
+export default function WinModal({ record, puzzle, opponent, mode = "win", onNewGame, onClose }: WinModalProps) {
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const outcome = opponent ? judge(record.timeSec, opponent.timeSec) : null;
 
   useEffect(() => {
-    if (outcome === "lose") return; // 졌을 땐 컨페티 없음
+    if (outcome === "lose" || mode === "review") return; // 졌을 때·기록 다시 보기엔 컨페티 없음
     const t = setTimeout(() => fireConfetti(DIFF_THEME[record.difficulty].primary), 350);
     return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -178,7 +179,7 @@ export default function WinModal({ record, puzzle, opponent, onNewGame, onClose 
             className="font-display -rotate-2 text-[2.6rem] leading-none"
             style={{ color: "var(--on-flood)", textShadow: "4px 4px 0 #141414" }}
           >
-            {outcome ? OUTCOME_LABEL[outcome] : "클리어!"}
+            {outcome ? OUTCOME_LABEL[outcome] : mode === "review" ? "클리어 기록" : "클리어!"}
           </p>
         </div>
 
@@ -314,13 +315,15 @@ export default function WinModal({ record, puzzle, opponent, onNewGame, onClose 
             </button>
           </div>
           <div className="mt-1 flex items-center justify-center gap-5">
-            <button
-              onClick={onNewGame}
-              className="text-[0.82rem] font-extrabold underline underline-offset-4"
-              style={{ color: "var(--on-flood)" }}
-            >
-              한 판 더 →
-            </button>
+            {mode === "win" && (
+              <button
+                onClick={onNewGame}
+                className="text-[0.82rem] font-extrabold underline underline-offset-4"
+                style={{ color: "var(--on-flood)" }}
+              >
+                한 판 더 →
+              </button>
+            )}
             <button onClick={onClose} className="text-[0.82rem] font-bold opacity-80" style={{ color: "var(--on-flood)" }}>
               닫기
             </button>
