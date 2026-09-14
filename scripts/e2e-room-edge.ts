@@ -66,6 +66,7 @@ async function main() {
   console.log("제3자 랜딩:", (await c.locator("h1").innerText()).replace(/\n/g, " "));
   await c.getByRole("link", { name: "대결로 들어가기" }).click();
   await c.getByText("이미 시작된 대결이에요").waitFor({ timeout: 10000 });
+  await c.waitForTimeout(700);
   await c.screenshot({ path: `${OUT}/edge-c-blocked.png` });
   await c.getByRole("button", { name: "홈으로" }).click();
   await c.locator('[role="grid"]').waitFor({ timeout: 10000 });
@@ -76,6 +77,7 @@ async function main() {
   await b.getByRole("button", { name: /친구와 대결 쉬움/ }).click();
   await b.getByRole("button", { name: "보통" }).first().click();
   await a.getByText("친구가 중간에 나갔어요").waitFor({ timeout: 15000 });
+  await a.waitForTimeout(900);
   await a.screenshot({ path: `${OUT}/edge-a-forfeit-win.png` });
   console.log("A 기권 승리 모달 OK");
   // B는 일반 게임으로 돌아갔는지
@@ -90,7 +92,10 @@ async function main() {
   console.log("A 홈 복귀 모드:", aMode.replace(/\n/g, " "));
   if (!aMode.includes("오늘의 스도쿠")) throw new Error("홈 복귀 실패");
 
-  // 5) 끝난 방 링크 → "끝났거나 없는 대결" 아님(기권 종료 = finished → 참가자면 들어갈 수 있음) / 없는 방
+  // 5) 끝난 방 링크 → 결과 카드 / 없는 방
+  await c.goto(url, { waitUntil: "networkidle" });
+  console.log("끝난 방 랜딩:", (await c.locator("h1").innerText()).replace(/\n/g, " "), "|", await c.getByText(/중간에 나갔어요|먼저 다 풀었어요|빨라요/).innerText());
+  await c.screenshot({ path: `${OUT}/edge-c-finished.png`, fullPage: true });
   await c.goto(`${BASE}/room/ZZZZZ2`, { waitUntil: "networkidle" });
   console.log("없는 방 랜딩:", (await c.locator("h1").innerText()).replace(/\n/g, " "));
 

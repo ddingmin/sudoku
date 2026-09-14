@@ -247,7 +247,7 @@ export default function Home() {
       rival: { timeSec: playerTimeSec(view, opponentOf(me)), mistakes: rival.mistakes, hints: rival.hints },
       forfeit: view.endedReason === "forfeit",
       shareUrl: url,
-      shareText: resultShareText(label, playerTimeSec(view, me), playerTimeSec(view, opponentOf(me)), outcome),
+      shareText: resultShareText(label, playerTimeSec(view, me), playerTimeSec(view, opponentOf(me)), outcome, view.endedReason === "forfeit"),
       rematch: {
         label: waitingRematch ? "친구가 기다려요 · 다시 붙기" : view.status === "finished" ? "다시 붙기" : "친구가 끝나면 다시 붙기",
         pending: rematchPending || view.status !== "finished",
@@ -374,7 +374,7 @@ export default function Home() {
                 친구 연결이 끊겼어요. 1분 안에 돌아오지 않으면 승리로 처리돼요.
               </RoomBanner>
             )}
-            {inRoom && room.connection === "reconnecting" && (
+            {inRoom && room.connection === "reconnecting" && room.reconnectingFor > 3000 && (
               <RoomBanner key="reconnect" tone="warn">
                 서버와 다시 연결하는 중이에요.
               </RoomBanner>

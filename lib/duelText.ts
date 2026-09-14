@@ -38,8 +38,15 @@ export function paceLine(mine: number, rival: number, rivalFinished: boolean): s
   return "친구와 같은 칸 수예요";
 }
 
-// 결과 공유 텍스트 (1인칭)
-export function resultShareText(label: string, mineSec: number | null, rivalSec: number | null, outcome: DuelOutcome, url?: string): string {
+// 결과 공유 텍스트 (1인칭). forfeit = 한쪽이 중간에 나감, 아니면서 시간이 비면 아직 푸는 중
+export function resultShareText(
+  label: string,
+  mineSec: number | null,
+  rivalSec: number | null,
+  outcome: DuelOutcome,
+  forfeit: boolean,
+  url?: string,
+): string {
   const head = `스도쿠 실시간 대결 · ${label}`;
   let body: string;
   if (mineSec !== null && rivalSec !== null) {
@@ -50,8 +57,10 @@ export function resultShareText(label: string, mineSec: number | null, rivalSec:
         : outcome === "lose"
           ? `${formatTime(mineSec)} vs ${formatTime(rivalSec)}, ${gap} 차이로 졌다. 한 판 더 붙자`
           : `${formatTime(mineSec)} vs ${formatTime(rivalSec)}, 완전히 같은 시간`;
+  } else if (forfeit) {
+    body = outcome === "win" ? "친구가 중간에 나가서 내가 이겼다" : "내가 중간에 나갔다. 다음엔 끝까지";
   } else {
-    body = outcome === "win" ? `친구가 중간에 나가서 내가 이겼다` : `내가 중간에 나갔다. 다음엔 끝까지`;
+    body = mineSec !== null ? `${formatTime(mineSec)}에 먼저 다 풀었다. 친구는 아직 푸는 중` : "친구가 먼저 다 풀었다. 나는 아직 푸는 중";
   }
   return [head, body, ...(url ? [url] : [])].join("\n");
 }

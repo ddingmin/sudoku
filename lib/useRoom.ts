@@ -10,6 +10,7 @@ export type RoomConnection = "idle" | "connecting" | "open" | "reconnecting" | "
 export function useRoom(roomId: string | null) {
   const [view, setView] = useState<RoomView | null>(null);
   const [connection, setConnection] = useState<RoomConnection>("idle");
+  const reconnectSinceRef = useRef<number | null>(null); // 재접속 시작 시각 — 잠깐 끊긴 건 배너로 알리지 않기 위해
   const [error, setError] = useState<string | null>(null);
   const offsetRef = useRef(0); // serverNow - clientNow
   const [, force] = useState(0); // 1초마다 리렌더 (타이머·카운트다운)
@@ -45,7 +46,10 @@ export function useRoom(roomId: string | null) {
       tokenRef.current = token;
       const es = new EventSource(`/api/room/${roomId}/events?token=${encodeURIComponent(token)}`);
       esRef.current = es;
-      es.addEventListener("open", () => setConnection("open"));
+      es.addEventListener("open", () => {
+        reconnectSinceRef.current = null;
+        setConnection("open");
+      });
       es.addEventListener("state", (e) => applyView(JSON.parse((e as MessageEvent).data) as RoomView));
       es.addEventListener("ping", (e) => {
         const { now } = JSON.parse((e as MessageEvent).data) as { now: number };
@@ -57,7 +61,10 @@ export function useRoom(roomId: string | null) {
         es.close();
       });
       // 서버가 maxDuration 전에 정상 종료하면 브라우저가 자동 재접속한다
-      es.addEventListener("error", () => setConnection((c) => (c === "open" ? "reconnecting" : c)));
+      es.addEventListener("error", () => {
+        reconnectSinceRef.current ??= Date.now();
+        setConnection((c) => (c === "open" ? "reconnecting" : c));
+      });
     };
 
     (async () => {
@@ -144,5 +151,6 @@ export function useRoom(roomId: string | null) {
     }
   }, []);
 
-  return { view, connection, error, serverNow, sendProgress, leave, rematch, token: tokenRef.current };
+  const reconnectingFor = reconnectSinceRef.current ? Date.now() - reconnectSinceRef.current : 0;
+  return { view, connection, reconnectingFor, error, serverNow, sendProgress, leave, rematch, token: tokenRef.current };
 }

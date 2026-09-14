@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { readRoom } from "@/lib/roomServer";
-import { DIFFICULTY_LABEL } from "@/lib/sudoku";
+import { readRoom, toView } from "@/lib/roomServer";
+import { ResultCode, encodeResult, resultFromView } from "@/lib/room";
+import { DIFFICULTY_LABEL, todayKey } from "@/lib/sudoku";
 import { Emblem } from "@/components/ShareCard";
+import DuelResultCard from "@/components/DuelResultCard";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +13,12 @@ interface Props {
 }
 
 async function load(id: string) {
-  const rec = await readRoom(id.toUpperCase(), Date.now());
-  return rec ? { status: rec.status, difficulty: rec.difficulty, hasGuest: !!rec.guest } : null;
+  const now = Date.now();
+  const rec = await readRoom(id.toUpperCase(), now);
+  if (!rec) return null;
+  // 끝난 방은 결과를 바로 보여준다
+  const result: ResultCode | null = rec.status === "finished" ? resultFromView(toView(rec, "host", now)) : null;
+  return { status: rec.status, difficulty: rec.difficulty, hasGuest: !!rec.guest, result };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -23,9 +29,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? "끝났거나 없는 대결이에요"
     : r.status === "waiting"
       ? "친구가 기다리고 있어요. 링크를 열면 같은 문제로 바로 시작돼요."
-      : r.status === "abandoned"
-        ? "끝난 대결이에요"
-        : "이미 시작된 대결이에요";
+      : r.status === "finished"
+        ? "끝난 대결이에요. 결과를 볼 수 있어요."
+        : r.status === "abandoned"
+          ? "끝난 대결이에요"
+          : "이미 시작된 대결이에요";
   return { title, description, openGraph: { title, description }, twitter: { card: "summary_large_image", title, description }, robots: { index: false } };
 }
 
@@ -34,7 +42,8 @@ export default async function RoomPage({ params }: Props) {
   const r = await load(id);
   const code = id.toUpperCase();
   const joinable = r && r.status === "waiting";
-  const rejoinable = r && (r.status === "countdown" || r.status === "playing" || r.status === "finished");
+  const finished = r && r.status === "finished" && r.result;
+  const rejoinable = r && !finished && (r.status === "countdown" || r.status === "playing" || r.status === "finished");
 
   return (
     <main
@@ -56,6 +65,14 @@ export default async function RoomPage({ params }: Props) {
                 <span>지금 붙어볼래?</span>
               </span>
             </>
+          ) : finished ? (
+            <>
+              실시간 대결
+              <br />
+              <span className="swipe">
+                <span>결과</span>
+              </span>
+            </>
           ) : rejoinable ? (
             <>
               이미 시작된
@@ -71,11 +88,22 @@ export default async function RoomPage({ params }: Props) {
           )}
         </h1>
         <p className="text-[0.82rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-          {joinable ? "친구가 기다리고 있어요" : rejoinable ? "참가자라면 이어서 들어갈 수 있어요" : "친구에게 새 링크를 받아 주세요"}
+          {joinable ? "친구가 기다리고 있어요" : finished ? "같은 문제를 같은 순간에 풀었어요" : rejoinable ? "참가자라면 이어서 들어갈 수 있어요" : "친구에게 새 링크를 받아 주세요"}
         </p>
       </div>
 
-      {r && (
+      {finished && r.result && (
+        <DuelResultCard
+          record={{ daily: false, dateKey: todayKey(), difficulty: r.difficulty }}
+          left={{ label: "방장", subject: "방장 기록이", timeSec: r.result.host.timeSec, mistakes: r.result.host.mistakes, hints: r.result.host.hints }}
+          right={{ label: "도전자", subject: "도전자 기록이", timeSec: r.result.guest.timeSec, mistakes: r.result.guest.mistakes, hints: r.result.guest.hints }}
+          leftWon={r.result.winner === "host"}
+          forfeit={r.result.forfeit}
+          title={`실시간 대결 · ${DIFFICULTY_LABEL[r.difficulty]}`}
+        />
+      )}
+
+      {r && !finished && (
         <div
           className="flex w-full items-center justify-between p-5"
           style={{ background: "var(--surface)", border: "2.5px solid var(--edge)", borderRadius: "var(--r-xl)", boxShadow: "var(--shadow-xl)" }}
@@ -125,8 +153,13 @@ export default async function RoomPage({ params }: Props) {
             className="chunky chunky-press flex w-full items-center justify-center gap-2 py-4 text-[1rem] font-extrabold"
             style={{ background: "var(--primary)", color: "var(--on-primary)", boxShadow: "var(--shadow-lg)" }}
           >
-            내가 방 만들기
+            {finished ? "나도 친구와 대결하기" : "내가 방 만들기"}
           </a>
+        )}
+        {finished && r.result && (
+          <Link href={`/result/${encodeResult(r.result)}`} className="text-[0.78rem] font-bold underline underline-offset-4" style={{ color: "var(--ink-faint)" }}>
+            결과 링크 열기
+          </Link>
         )}
         <Link href="/" className="text-[0.78rem] font-bold underline underline-offset-4" style={{ color: "var(--ink-faint)" }}>
           홈으로
