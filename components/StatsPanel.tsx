@@ -8,6 +8,7 @@ import { Stats, clearedDayCount, streakInfo } from "@/lib/stats";
 import { backupUrl } from "@/lib/backup";
 import GrassGrid from "./GrassGrid";
 import { encodeRecord, formatTime, shareText, ShareRecord } from "@/lib/encode";
+import { challengeText, encodeDuel, isChallengeable } from "@/lib/duel";
 
 interface StatsPanelProps {
   stats: Stats;
@@ -20,12 +21,11 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
   const dayCount = clearedDayCount(stats);
   const winRate = stats.played > 0 ? Math.round((stats.cleared / stats.played) * 100) : 0;
 
-  const shareHistory = async (r: ShareRecord) => {
-    const url = `${location.origin}/share/${encodeRecord(r)}`;
-    const text = shareText(r);
+  // 공유 시트 → 클립보드 폴백
+  const shareLink = async (title: string, text: string, url: string, copiedMsg: string) => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: "스도쿠", text, url });
+        await navigator.share({ title, text, url });
         return;
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return;
@@ -33,9 +33,17 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
     }
     try {
       await navigator.clipboard.writeText(`${text}\n${url}`);
-      showToast("링크를 복사했어요");
-    } catch {}
+      showToast(copiedMsg);
+    } catch {
+      showToast("복사에 실패했어요");
+    }
   };
+
+  const shareHistory = (r: ShareRecord) => shareLink("스도쿠", shareText(r), `${location.origin}/share/${encodeRecord(r)}`, "링크를 복사했어요");
+
+  // 지난 기록으로도 대결 신청 — 무브 로그(시간 포함)가 남아 있는 기록만
+  const shareChallenge = (r: ShareRecord) =>
+    shareLink("스도쿠 1:1 대결", challengeText(r), `${location.origin}/duel/${encodeDuel({ record: r })}`, "대결 링크를 복사했어요");
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -176,7 +184,7 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
                           BEST
                         </span>
                       )}
-                      <span className="ml-1.5 text-[0.66rem] font-bold" style={{ color: "var(--ink-faint)" }}>
+                      <span className="ml-1.5 inline-block whitespace-nowrap text-[0.66rem] font-bold" style={{ color: "var(--ink-faint)" }}>
                         {h.daily ? "오늘의 스도쿠" : "자유"} · {h.dateKey.replace(/-/g, ".")}
                       </span>
                     </p>
@@ -204,10 +212,28 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
                       </span>
                     </p>
                   </Link>
+                  {isChallengeable(record) && (
+                    <button
+                      onClick={() => shareChallenge(record)}
+                      aria-label="이 기록으로 대결 신청"
+                      className="chunky-sm chunky-press flex h-9 w-9 shrink-0 items-center justify-center"
+                      style={{ background: "var(--pop)", color: "var(--on-pop)" }}
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m14.5 17.5 3-3" />
+                        <path d="M3 21l6-6" />
+                        <path d="m14 5 5 5" />
+                        <path d="M21 3l-8.5 8.5" />
+                        <path d="m9.5 6.5-3-3" />
+                        <path d="M10 14l-6 6" />
+                        <path d="M3 3l8.5 8.5" />
+                      </svg>
+                    </button>
+                  )}
                   <button
                     onClick={() => shareHistory(record)}
                     aria-label="이 기록 공유"
-                    className="chunky-sm chunky-press flex h-9 w-9 items-center justify-center"
+                    className="chunky-sm chunky-press flex h-9 w-9 shrink-0 items-center justify-center"
                     style={{ background: "var(--primary)", color: "var(--on-primary)" }}
                   >
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -227,7 +253,7 @@ export default function StatsPanel({ stats, onClose }: StatsPanelProps) {
           <div className="min-w-0">
             <p className="text-[0.78rem] font-extrabold">다른 기기로 기록 옮기기</p>
             <p className="mt-0.5 text-[0.66rem] font-bold leading-snug" style={{ color: "var(--ink-faint)" }}>
-              링크를 새 기기에서 열면 기록이 합쳐집니다
+              새 기기에서 열면 기록이 합쳐집니다
             </p>
           </div>
           <button
