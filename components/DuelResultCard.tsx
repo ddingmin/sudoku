@@ -1,18 +1,28 @@
 // 대결 결과 카드 — 양쪽 기록을 나란히. WinModal / 결과 랜딩 공용 (서버 렌더 가능)
 import { ShareRecord, formatTime } from "@/lib/encode";
 import { DIFFICULTY_LABEL, dailyNumber } from "@/lib/sudoku";
-import { judge, verdictText } from "@/lib/duel";
+import { verdictText } from "@/lib/duelText";
 
 export interface DuelSide {
-  label: string; // "나" / "친구" / "도전장" / "답장"
-  subject: string; // 승패 문장의 주어: "내 기록이" / "친구 기록이" / "도전장 기록이"
-  timeSec: number;
+  label: string; // "나" / "친구"
+  subject: string; // 승패 문장의 주어: "내 기록이" / "친구 기록이"
+  timeSec: number | null; // null = 완주하지 못함(기권·이탈)
   mistakes: number;
   hints: number;
 }
 
-export default function DuelResultCard({ record, left, right }: { record: ShareRecord; left: DuelSide; right: DuelSide }) {
-  const outcome = judge(left.timeSec, right.timeSec);
+interface Props {
+  record: Pick<ShareRecord, "daily" | "dateKey" | "difficulty">;
+  left: DuelSide;
+  right: DuelSide;
+  leftWon: boolean; // 왼쪽이 승자인가 (시간 비교가 아니라 서버 판정을 그대로 받는다)
+  forfeit?: boolean;
+}
+
+const who = (label: string) => (label === "나" ? "내가" : `${label}가`);
+
+export default function DuelResultCard({ record, left, right, leftWon, forfeit }: Props) {
+  const tie = left.timeSec !== null && right.timeSec !== null && left.timeSec === right.timeSec;
 
   const side = (s: DuelSide, won: boolean) => (
     <div
@@ -35,7 +45,7 @@ export default function DuelResultCard({ record, left, right }: { record: ShareR
       <span className="text-[0.62rem] font-extrabold tracking-widest" style={{ opacity: 0.8 }}>
         {s.label}
       </span>
-      <span className="font-display tabular text-[1.9rem] leading-none">{formatTime(s.timeSec)}</span>
+      <span className="font-display tabular text-[1.9rem] leading-none">{s.timeSec !== null ? formatTime(s.timeSec) : "—"}</span>
       <span className="tabular text-[0.66rem] font-bold" style={{ opacity: 0.85 }}>
         실수 {s.mistakes} · 힌트 {s.hints}
       </span>
@@ -61,17 +71,21 @@ export default function DuelResultCard({ record, left, right }: { record: ShareR
       </div>
 
       <div className="mt-4 flex items-stretch gap-2">
-        {side(left, outcome === "win")}
+        {side(left, !tie && leftWon)}
         <div className="flex items-center">
           <span className="font-display -rotate-6 text-[1.1rem]" style={{ color: "var(--ink-faint)" }}>
             VS
           </span>
         </div>
-        {side(right, outcome === "lose")}
+        {side(right, !tie && !leftWon)}
       </div>
 
       <p className="mt-3.5 text-center text-[0.78rem] font-extrabold" style={{ color: "var(--ink-soft)" }}>
-        {verdictText(left.timeSec, right.timeSec, left.subject, right.subject)}
+        {left.timeSec !== null && right.timeSec !== null
+          ? verdictText(left.timeSec, right.timeSec, left.subject, right.subject)
+          : forfeit
+            ? `${who(leftWon ? right.label : left.label)} 중간에 나갔어요`
+            : `${who(leftWon ? left.label : right.label)} 먼저 다 풀었어요`}
       </p>
     </div>
   );

@@ -8,15 +8,26 @@ import { downloadShareImage, shareImageFile } from "@/lib/shareImage";
 import { shareVideo } from "@/lib/shareVideo";
 import { DIFF_THEME } from "@/lib/palette";
 import { computeHighlights, highlightLines } from "@/lib/recap";
-import { OUTCOME_LABEL, challengeText, encodeDuel, isChallengeable, judge, replyText } from "@/lib/duel";
+import { DuelOutcome, OUTCOME_LABEL } from "@/lib/duelText";
 import ShareCard from "./ShareCard";
 import RecapBoard from "./RecapBoard";
 import DuelResultCard from "./DuelResultCard";
 
+// 실시간 대결 결과 — 판정은 서버가 내린 것을 그대로 받는다
+export interface DuelInfo {
+  outcome: DuelOutcome;
+  rival: { timeSec: number | null; mistakes: number; hints: number };
+  forfeit: boolean;
+  shareUrl: string; // /result/<code>
+  shareText: string;
+  rematch: { label: string; onClick: () => void; pending: boolean };
+  onExit: () => void; // 방을 떠나 홈으로
+}
+
 interface WinModalProps {
   record: ShareRecord;
   puzzle?: number[] | null; // 주어진 숫자 그리드 (리캡 리플레이용)
-  opponent?: ShareRecord | null; // 고스트 대결이었으면 상대 기록
+  duel?: DuelInfo | null; // 실시간 대결이었으면 결과
   mode?: "win" | "review"; // review = 지난 기록 다시 보기 (기록 화면에서 진입). 컨페티·"한 판 더" 없음, 헤드라인만 다름
   onNewGame: () => void;
   onClose: () => void;
@@ -35,11 +46,11 @@ function fireConfetti(primary: string) {
   );
 }
 
-export default function WinModal({ record, puzzle, opponent, mode = "win", onNewGame, onClose }: WinModalProps) {
+export default function WinModal({ record, puzzle, duel, mode = "win", onNewGame, onClose }: WinModalProps) {
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
-  const outcome = opponent ? judge(record.timeSec, opponent.timeSec) : null;
+  const outcome = duel?.outcome ?? null;
 
   useEffect(() => {
     if (outcome === "lose" || mode === "review") return; // 졌을 때·기록 다시 보기엔 컨페티 없음
@@ -62,16 +73,7 @@ export default function WinModal({ record, puzzle, opponent, mode = "win", onNew
     await copyToClipboard(`${text}\n${url}`, copiedMsg);
   };
 
-  // 1:1 대결 신청: 내 기록(무브 포함)을 도전장 코드로
-  const shareChallenge = () =>
-    shareLink("스도쿠 1:1 대결", challengeText(record), `${location.origin}/duel/${encodeDuel({ record })}`, "대결 링크를 복사했어요");
-
-  // 대결 답장: 내 기록 + 상대 요약
-  const shareReply = () => {
-    if (!opponent) return;
-    const d = { record, opponent: { timeSec: opponent.timeSec, mistakes: opponent.mistakes, hints: opponent.hints } };
-    return shareLink("스도쿠 대결 결과", replyText(d), `${location.origin}/duel/${encodeDuel(d)}`, "결과 링크를 복사했어요");
-  };
+  const shareResult = () => duel && shareLink("스도쿠 실시간 대결", duel.shareText, duel.shareUrl, "결과 링크를 복사했어요");
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -208,11 +210,13 @@ export default function WinModal({ record, puzzle, opponent, mode = "win", onNew
           </div>
         )}
 
-        {opponent ? (
+        {duel ? (
           <DuelResultCard
             record={record}
             left={{ label: "나", subject: "내 기록이", timeSec: record.timeSec, mistakes: record.mistakes, hints: record.hints }}
-            right={{ label: "친구", subject: "친구 기록이", timeSec: opponent.timeSec, mistakes: opponent.mistakes, hints: opponent.hints }}
+            right={{ label: "친구", subject: "친구 기록이", timeSec: duel.rival.timeSec, mistakes: duel.rival.mistakes, hints: duel.rival.hints }}
+            leftWon={duel.outcome === "win"}
+            forfeit={duel.forfeit}
           />
         ) : (
           <ShareCard record={record} />
@@ -220,17 +224,33 @@ export default function WinModal({ record, puzzle, opponent, mode = "win", onNew
 
         {/* 공유 버튼들 */}
         <div className="mt-4 flex flex-col gap-2.5">
-          {opponent ? (
-            <button
-              onClick={shareReply}
-              className="chunky chunky-press flex items-center justify-center gap-2 py-3.5 text-[0.95rem] font-extrabold"
-              style={{ background: "var(--pop)", color: "var(--on-pop)", boxShadow: "var(--shadow-md)" }}
-            >
-              <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m3 11 18-8-8 18-2-8-8-2Z" />
-              </svg>
-              친구에게 결과 보내기
-            </button>
+          {duel ? (
+            <>
+              <button
+                onClick={duel.rematch.onClick}
+                disabled={duel.rematch.pending}
+                className="chunky chunky-press flex items-center justify-center gap-2 py-3.5 text-[0.95rem] font-extrabold disabled:opacity-60"
+                style={{ background: "var(--pop)", color: "var(--on-pop)", boxShadow: "var(--shadow-md)" }}
+              >
+                <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a9 9 0 1 1-3-6.7" />
+                  <path d="M21 2v6h-6" />
+                </svg>
+                {duel.rematch.label}
+              </button>
+              <button
+                onClick={shareResult}
+                className="chunky chunky-press flex items-center justify-center gap-2 py-3 text-[0.9rem] font-extrabold"
+                style={{ color: "var(--ink)", boxShadow: "var(--shadow-md)" }}
+              >
+                <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <path d="m16 6-4-4-4 4" />
+                  <path d="M12 2v13" />
+                </svg>
+                결과 공유
+              </button>
+            </>
           ) : (
           <button
             onClick={record.moves && record.moves.length > 0 && record.seed !== undefined ? shareReels : shareStory}
@@ -259,24 +279,6 @@ export default function WinModal({ record, puzzle, opponent, mode = "win", onNew
               </>
             )}
           </button>
-          )}
-          {!opponent && isChallengeable(record) && (
-            <button
-              onClick={shareChallenge}
-              className="chunky chunky-press flex items-center justify-center gap-2 py-3 text-[0.9rem] font-extrabold"
-              style={{ color: "var(--ink)", boxShadow: "var(--shadow-md)" }}
-            >
-              <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m14.5 17.5 3-3" />
-                <path d="M3 21l6-6" />
-                <path d="m14 5 5 5" />
-                <path d="M21 3l-8.5 8.5" />
-                <path d="m9.5 6.5-3-3" />
-                <path d="M10 14l-6 6" />
-                <path d="M3 3l8.5 8.5" />
-              </svg>
-              친구에게 대결 신청
-            </button>
           )}
           <div className="flex gap-2.5">
             <button
@@ -317,11 +319,11 @@ export default function WinModal({ record, puzzle, opponent, mode = "win", onNew
           <div className="mt-1 flex items-center justify-center gap-5">
             {mode === "win" && (
               <button
-                onClick={onNewGame}
+                onClick={duel ? duel.onExit : onNewGame}
                 className="text-[0.82rem] font-extrabold underline underline-offset-4"
                 style={{ color: "var(--on-flood)" }}
               >
-                한 판 더 →
+                {duel ? "홈으로" : "한 판 더 →"}
               </button>
             )}
             <button onClick={onClose} className="text-[0.82rem] font-bold opacity-80" style={{ color: "var(--on-flood)" }}>

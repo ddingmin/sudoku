@@ -5,6 +5,7 @@ import { MAX_HINTS } from "@/lib/useGame";
 interface ControlsProps {
   noteMode: boolean;
   hintsUsed: number;
+  hintsDisabled?: boolean; // 실시간 대결 중엔 힌트 없음
   onUndo: () => void;
   onErase: () => void;
   onToggleNote: () => void;
@@ -54,7 +55,7 @@ function ControlButton({
 
 const icon = "h-4.5 w-4.5";
 
-export default function Controls({ noteMode, hintsUsed, onUndo, onErase, onToggleNote, onHint }: ControlsProps) {
+export default function Controls({ noteMode, hintsUsed, hintsDisabled, onUndo, onErase, onToggleNote, onHint }: ControlsProps) {
   return (
     <div className="flex w-full gap-2">
       <ControlButton label="되돌리기" onClick={onUndo}>
@@ -75,10 +76,10 @@ export default function Controls({ noteMode, hintsUsed, onUndo, onErase, onToggl
         </svg>
       </ControlButton>
       <ControlButton
-        label="힌트"
+        label={hintsDisabled ? "힌트 없음" : "힌트"}
         onClick={onHint}
-        disabled={hintsUsed >= MAX_HINTS}
-        badge={`${MAX_HINTS - hintsUsed}`}
+        disabled={hintsDisabled || hintsUsed >= MAX_HINTS}
+        badge={hintsDisabled ? undefined : `${MAX_HINTS - hintsUsed}`}
       >
         <svg className={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />

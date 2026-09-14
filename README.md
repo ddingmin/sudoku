@@ -10,7 +10,7 @@
 - **풀이 리캡** — 클리어하면 내가 채운 순서를 타임랩스로 재생하고 "한 칸에서 1분 35초 고민" 같은 하이라이트를 뽑아줍니다.
 - **자랑하기** — 기록 카드 PNG, 풀이 타임랩스 MP4(브라우저에서 바로 인코딩), Wordle 스타일 텍스트, 공유 링크 중 골라서 공유합니다.
 - **공유 링크** — 서버 저장 없이 URL 안에 기록과 풀이 순서를 통째로 담습니다(약 80~100자). 링크를 열면 친구 기록의 리캡이 재생되고, 카톡·X·슬랙 미리보기용 OG 카드가 자동 생성됩니다.
-- **1:1 고스트 대결** — 클리어 후 "대결 신청" 링크를 보내면 친구가 같은 문제를 풀면서 내가 그 시점에 채운 칸을 고스트로 봅니다(숫자는 안 보임). 클리어 시간으로 승패가 나고, 결과는 답장 링크로 돌려보냅니다. 역시 서버 없이 링크만 오갑니다. 설계는 [docs/duel.md](docs/duel.md).
+- **친구와 실시간 대결** — 방을 만들어 링크를 보내면 친구가 열자마자 카운트다운 뒤 같은 문제를 동시에 풉니다. 친구가 채운 칸이 보드에 점으로 보이고(숫자는 비공개), 먼저 다 푸는 쪽이 이깁니다. 시작·완주 시각과 정답은 서버가 판정하며, 전송은 SSE(서버→클라이언트) + POST입니다. 결과는 링크 하나로 공유합니다. 설계는 [docs/realtime-duel.md](docs/realtime-duel.md).
 - **게임 도구** — 메모 모드, 되돌리기, 힌트, 숫자별 남은 개수, 키보드 입력. 진행 상태는 자동 저장되어 앱을 오갔다 와도 이어서 풉니다.
 - **기록** — 날짜별 클리어 잔디, 연속 클리어 스트릭, 난이도별 베스트, 완주율. 모두 기기에만 저장됩니다(로그인 없음).
 - **기록 옮기기** — 기록 전체를 링크 하나에 담아 다른 기기에서 열면 합쳐집니다. 서버 저장 없이 기기 이동과 백업을 해결합니다.
@@ -25,21 +25,28 @@ npm run dev        # http://localhost:3000
 
 ```bash
 npm run typecheck  # 타입 검사
-npm run verify     # 퍼즐 생성기 유일해 + 공유·백업·대결 코드 라운드트립 검증
+npm run verify     # 퍼즐 생성기 유일해 + 공유·백업 코드 라운드트립 + 대결 서버 로직(만료·기권·재대결) 검증
 npm run build
 ```
 
 배포는 Vercel에 그대로 올리면 됩니다. OG 이미지의 절대 URL은 Vercel 환경에서 자동으로 잡히고, 다른 호스팅이라면 `NEXT_PUBLIC_SITE_URL`을 설정하세요.
 
+실시간 대결의 방 상태는 Redis에 둡니다(Vercel Marketplace의 Upstash: `vercel integration add upstash`, 환경 변수 `KV_REST_API_URL`/`KV_REST_API_TOKEN` 또는 `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`). 변수가 없으면 인메모리 저장소로 동작해 로컬 `next dev`에서는 그대로 대결을 테스트할 수 있지만, 배포 환경에서는 인스턴스 간 공유가 안 되므로 반드시 Redis를 연결해야 합니다.
+
 ## 구조
 
 ```
-app/                  Next.js App Router (메인 게임, /share/[code] 공유 랜딩 + OG, /duel/[code] 대결 도전장·결과 + OG, /restore 기록 불러오기)
+app/                  Next.js App Router (메인 게임, /share/[code] 공유 랜딩 + OG, /room/[id] 대결 초대 + OG, /result/[code] 대결 결과 + OG, /api/room 대결 API·SSE, /restore 기록 불러오기)
 components/           보드·넘버패드·승리 모달·공유 카드 등 UI
 lib/sudoku.ts         퍼즐 생성기 (시드 기반, 유일해 검증)
 lib/useGame.ts        게임 상태·입력·저장
 lib/encode.ts         공유 코드 인코딩/디코딩 (비트 패킹, 구버전 링크 호환)
-lib/duel.ts           1:1 고스트 대결 코드 (체크포인트 시간 복원, 고스트 진행, 승패)
+lib/room.ts           실시간 대결 공용 타입·상수·파생값·결과 코드
+lib/roomServer.ts     대결 서버 로직 (방 생성·참가·진행 검증·완주·기권·재대결·시간 전이)
+lib/store.ts          방 저장소 (Upstash Redis / 로컬 인메모리, CAS 갱신)
+lib/useRoom.ts        브라우저 SSE 구독·시계 보정·진행 전송 훅
+lib/roomClient.ts     대결 API 클라이언트·토큰 보관
+lib/duelText.ts       대결 문구·승패 판정
 lib/backup.ts         기록 백업 코드 (/restore#code, 기기 이동용)
 lib/stats.ts          기록 저장 (localStorage), 잔디·스트릭 파생, 병합
 lib/recap.ts          풀이 로그 → 하이라이트

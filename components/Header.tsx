@@ -11,8 +11,9 @@ interface HeaderProps {
   dateKey: string;
   elapsed: number;
   mistakes: number;
-  duel?: boolean; // 고스트 대결 중
+  duel?: boolean; // 실시간 대결 중
   onNewGame: (diff: Difficulty, daily: boolean) => void;
+  onOpenDuel: () => void;
   onOpenStats: () => void;
 }
 
@@ -29,7 +30,7 @@ function useTheme() {
   return { toggle };
 }
 
-export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, duel, onNewGame, onOpenStats }: HeaderProps) {
+export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, duel, onNewGame, onOpenDuel, onOpenStats }: HeaderProps) {
   const { toggle } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -61,6 +62,17 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
           </span>
         </h1>
         <div className="flex items-center gap-2">
+          <button onClick={onOpenDuel} aria-label="친구와 대결" className={iconBtn} style={{ color: duel ? "var(--on-pop)" : "var(--ink)", background: duel ? "var(--pop)" : undefined }}>
+            <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m14.5 17.5 3-3" />
+              <path d="M3 21l6-6" />
+              <path d="m14 5 5 5" />
+              <path d="M21 3l-8.5 8.5" />
+              <path d="m9.5 6.5-3-3" />
+              <path d="M10 14l-6 6" />
+              <path d="M3 3l8.5 8.5" />
+            </svg>
+          </button>
           <button onClick={onOpenStats} aria-label="기록 보기" className={iconBtn} style={{ color: "var(--ink)" }}>
             <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M4 20v-6" />

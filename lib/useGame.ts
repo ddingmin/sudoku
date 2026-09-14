@@ -13,7 +13,7 @@ import {
   rowOf,
   todayKey,
 } from "./sudoku";
-import { Move, ShareRecord } from "./encode";
+import { Move } from "./encode";
 
 export const MAX_HINTS = 3;
 
@@ -46,11 +46,11 @@ export interface GameState {
   dateKey: string;
   elapsed: number;
   noteMode: boolean;
-  duel: ShareRecord | null; // 고스트 대결 상대 기록 (무브 t 복원됨)
+  room: string | null; // 실시간 대결 방 ID. 대결 중엔 타이머를 서버 시각으로 맞추고 힌트를 막는다
 }
 
-// 첫 진입 의도: 해시(/#duel=… /#free=…)에서 온 요청. 없으면 저장 복원 → 기본 게임
-export type BootIntent = { duel: ShareRecord } | { free: Difficulty };
+// 첫 진입 의도: 해시(/#room=… /#free=…)에서 온 요청. 없으면 저장 복원 → 기본 게임
+export type BootIntent = { room: string } | { free: Difficulty };
 
 function unitCells(kind: "row" | "col" | "box", n: number): number[] {
   const out: number[] = [];
@@ -78,14 +78,14 @@ interface SavedGame {
   noteMode: boolean;
   moves: Move[];
   savedAt: number;
-  duel?: ShareRecord; // 대결 슬롯이면 상대 기록
+  room?: string; // 실시간 대결 슬롯이면 방 ID
 }
 
 const SAVES_KEY = "sudoku:games:v1";
 const CURRENT_KEY = "sudoku:current:v1";
 
-function gameKey(daily: boolean, difficulty: Difficulty, dateKey: string, seed: number, duel = false): string {
-  if (duel) return `x:${difficulty}:${seed}`; // 대결은 같은 퍼즐의 일반 슬롯과 분리
+function gameKey(daily: boolean, difficulty: Difficulty, dateKey: string, seed: number, room?: string): string {
+  if (room) return `r:${room}`; // 대결은 방 단위 슬롯
   return daily ? `d:${difficulty}:${dateKey}` : `f:${seed}`;
 }
 
@@ -117,7 +117,7 @@ function setCurrentKey(key: string | null) {
 
 function isSaveValid(s: SavedGame | undefined): s is SavedGame {
   if (!s || !Array.isArray(s.values) || s.values.length !== 81) return false;
-  if (s.daily && !s.duel && s.dateKey !== todayKey()) return false; // 지난 데일리는 폐기 (대결 슬롯은 유지)
+  if (s.daily && s.dateKey !== todayKey()) return false; // 지난 데일리는 폐기
   return true;
 }
 
@@ -138,7 +138,7 @@ export function useGame(
   const [daily, setDaily] = useState(initial.daily);
   const [difficulty, setDifficulty] = useState(initial.difficulty);
   const [dateKey, setDateKey] = useState(() => todayKey());
-  const [duel, setDuel] = useState<ShareRecord | null>(null);
+  const [room, setRoom] = useState<string | null>(null);
   const [fx, setFx] = useState<FxEvent | null>(null);
   const historyRef = useRef<HistoryEntry[]>([]);
   const fxIdRef = useRef(0);
@@ -171,12 +171,12 @@ export function useGame(
     setDifficulty(saved.difficulty);
     setDaily(saved.daily);
     setDateKey(saved.dateKey);
-    setDuel(saved.duel ?? null);
+    setRoom(saved.room ?? null);
     setFx(null);
     historyRef.current = [];
     movesRef.current = [...saved.moves];
     elapsedRef.current = saved.elapsed;
-    currentKeyRef.current = gameKey(saved.daily, saved.difficulty, saved.dateKey, saved.seed, !!saved.duel);
+    currentKeyRef.current = gameKey(saved.daily, saved.difficulty, saved.dateKey, saved.seed, saved.room);
     setCurrentKey(currentKeyRef.current);
     onStartRef.current?.(false);
   }, []);
@@ -205,7 +205,7 @@ export function useGame(
       setDifficulty(diff);
       setDaily(isDaily);
       setDateKey(today);
-      setDuel(null);
+      setRoom(null);
       setFx(null);
       historyRef.current = [];
       movesRef.current = [];
@@ -217,18 +217,16 @@ export function useGame(
     [applySave],
   );
 
-  // 고스트 대결 시작: 상대 기록의 퍼즐(같은 시드)을 깔고 상대 무브를 고스트로 붙인다.
-  // 같은 대결을 진행 중이었으면 이어서.
-  const newDuel = useCallback(
-    (opponent: ShareRecord) => {
-      if (opponent.seed === undefined || !opponent.moves?.length) return;
-      const key = gameKey(opponent.daily, opponent.difficulty, opponent.dateKey, opponent.seed, true);
+  // 실시간 대결 시작: 방의 시드로 퍼즐을 깔고 방 슬롯에 저장. 같은 방을 진행 중이었으면(새로고침) 이어서
+  const newRoomGame = useCallback(
+    (opts: { id: string; difficulty: Difficulty; seed: number }) => {
+      const key = gameKey(false, opts.difficulty, todayKey(), opts.seed, opts.id);
       const saved = loadSaves()[key];
-      if (isSaveValid(saved) && saved.duel) {
+      if (isSaveValid(saved) && saved.room === opts.id) {
         applySave(saved);
         return;
       }
-      const p = generatePuzzle(opponent.difficulty, opponent.seed);
+      const p = generatePuzzle(opts.difficulty, opts.seed);
       setPuzzle(p);
       setValues([...p.puzzle]);
       setNotes(new Array(81).fill(0));
@@ -238,10 +236,10 @@ export function useGame(
       setStatus("playing");
       setElapsed(0);
       setNoteMode(false);
-      setDifficulty(opponent.difficulty);
-      setDaily(opponent.daily);
-      setDateKey(opponent.dateKey);
-      setDuel(opponent);
+      setDifficulty(opts.difficulty);
+      setDaily(false);
+      setDateKey(todayKey());
+      setRoom(opts.id);
       setFx(null);
       historyRef.current = [];
       movesRef.current = [];
@@ -253,12 +251,31 @@ export function useGame(
     [applySave],
   );
 
+  // 대결 중 타이머는 서버 시각으로 맞춘다 (페이지가 매초 호출)
+  const syncElapsed = useCallback((sec: number) => {
+    elapsedRef.current = sec;
+    setElapsed(sec);
+  }, []);
+
+  // 대결을 떠날 때 슬롯 정리 (기권·종료 후 새 게임 전)
+  const clearRoomSave = useCallback((id: string) => {
+    const saves = loadSaves();
+    delete saves[`r:${id}`];
+    writeSaves(saves);
+    if (currentKeyRef.current === `r:${id}`) {
+      currentKeyRef.current = null;
+      setCurrentKey(null);
+    }
+  }, []);
+
   // 초기 퍼즐: 진행 중이던 게임이 있으면 복원, 없으면 새 게임 (클라이언트 전용)
   useEffect(() => {
     if (intentRef.current === undefined) intentRef.current = bootRef.current?.() ?? null;
     const intent = intentRef.current;
-    if (intent && "duel" in intent) {
-      newDuel(intent.duel);
+    if (intent && "room" in intent) {
+      // 방 정보(시드)는 서버 스냅샷이 와야 안다 — 같은 방을 진행 중이었으면 복원, 아니면 페이지가 newRoomGame을 부른다
+      const saved = loadSaves()[`r:${intent.room}`];
+      if (isSaveValid(saved) && saved.room === intent.room) applySave(saved);
       return;
     }
     if (intent && "free" in intent) {
@@ -295,7 +312,7 @@ export function useGame(
       noteMode,
       moves: movesRef.current,
       savedAt: Date.now(),
-      duel: duel ?? undefined,
+      room: room ?? undefined,
     };
     writeSaves(saves);
   };
@@ -327,9 +344,9 @@ export function useGame(
     currentKeyRef.current = null;
   }, [status]);
 
-  // 타이머 (탭이 보일 때만)
+  // 타이머 (탭이 보일 때만). 대결 중엔 서버 시각을 syncElapsed로 받는다
   useEffect(() => {
-    if (status !== "playing" || !puzzle) return;
+    if (status !== "playing" || !puzzle || room) return;
     const t = setInterval(() => {
       if (!document.hidden)
         setElapsed((e) => {
@@ -338,7 +355,7 @@ export function useGame(
         });
     }, 1000);
     return () => clearInterval(t);
-  }, [status, puzzle]);
+  }, [status, puzzle, room]);
 
   const given = useMemo(() => (puzzle ? puzzle.puzzle.map((v) => v !== 0) : []), [puzzle]);
 
@@ -474,7 +491,7 @@ export function useGame(
   }, [status]);
 
   const hint = useCallback(() => {
-    if (!puzzle || status !== "playing" || hintsUsed >= MAX_HINTS) return;
+    if (!puzzle || status !== "playing" || hintsUsed >= MAX_HINTS || room) return; // 대결 중 힌트 없음
     // 선택된 빈 칸 우선, 아니면 무작위 빈/오답 칸
     let target = selected;
     if (target === null || given[target] || values[target] === puzzle.solution[target]) {
@@ -499,7 +516,7 @@ export function useGame(
     movesRef.current.push({ i: target, k: 2, t: elapsedRef.current });
     emitFx("pop", new Map([[target, 0]]));
     checkCompletions(target, nextValues, puzzle.solution);
-  }, [puzzle, status, hintsUsed, selected, given, values, notes, emitFx, checkCompletions]);
+  }, [puzzle, status, hintsUsed, selected, given, values, notes, room, emitFx, checkCompletions]);
 
   const state: GameState | null = puzzle
     ? {
@@ -516,7 +533,7 @@ export function useGame(
         dateKey,
         elapsed,
         noteMode,
-        duel,
+        room,
       }
     : null;
 
@@ -534,6 +551,8 @@ export function useGame(
     hint,
     toggleNoteMode: () => setNoteMode((m) => !m),
     newGame,
-    newDuel,
+    newRoomGame,
+    syncElapsed,
+    clearRoomSave,
   };
 }

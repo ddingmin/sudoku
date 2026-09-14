@@ -7,7 +7,6 @@ import { Stats, clearedDayCount, streakInfo } from "@/lib/stats";
 import { backupUrl } from "@/lib/backup";
 import GrassGrid from "./GrassGrid";
 import { encodeRecord, formatTime, shareText, ShareRecord } from "@/lib/encode";
-import { challengeText, encodeDuel, isChallengeable } from "@/lib/duel";
 
 interface StatsPanelProps {
   stats: Stats;
@@ -40,10 +39,6 @@ export default function StatsPanel({ stats, onOpenRecord, onClose }: StatsPanelP
   };
 
   const shareHistory = (r: ShareRecord) => shareLink("스도쿠", shareText(r), `${location.origin}/share/${encodeRecord(r)}`, "링크를 복사했어요");
-
-  // 지난 기록으로도 대결 신청 — 무브 로그(시간 포함)가 남아 있는 기록만
-  const shareChallenge = (r: ShareRecord) =>
-    shareLink("스도쿠 1:1 대결", challengeText(r), `${location.origin}/duel/${encodeDuel({ record: r })}`, "대결 링크를 복사했어요");
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -212,24 +207,6 @@ export default function StatsPanel({ stats, onOpenRecord, onClose }: StatsPanelP
                       </span>
                     </p>
                   </button>
-                  {isChallengeable(record) && (
-                    <button
-                      onClick={() => shareChallenge(record)}
-                      aria-label="이 기록으로 대결 신청"
-                      className="chunky-sm chunky-press flex h-9 w-9 shrink-0 items-center justify-center"
-                      style={{ background: "var(--pop)", color: "var(--on-pop)" }}
-                    >
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="m14.5 17.5 3-3" />
-                        <path d="M3 21l6-6" />
-                        <path d="m14 5 5 5" />
-                        <path d="M21 3l-8.5 8.5" />
-                        <path d="m9.5 6.5-3-3" />
-                        <path d="M10 14l-6 6" />
-                        <path d="M3 3l8.5 8.5" />
-                      </svg>
-                    </button>
-                  )}
                   <button
                     onClick={() => shareHistory(record)}
                     aria-label="이 기록 공유"
