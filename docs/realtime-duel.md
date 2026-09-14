@@ -124,3 +124,33 @@ Player: { token, cells: number[], mistakes, hints, finishedAt?, forfeit?, lastSe
 - **Redis 커맨드 비용**: 폴링 간격으로 조절. 사용량 늘면 pub/sub 전환.
 - **시계**: 클라 시계를 믿지 않고 서버 시각 기준으로만 계산. 네트워크 지연만큼(수십 ms) 카운트다운이 어긋날 수 있으나 판정에는 영향 없음.
 - **모바일 백그라운드**: 앱 전환 시 SSE가 끊긴다 → 복귀 시 재접속·스냅샷으로 복구. 30초 이상 나가 있으면 상대에게 "끊김"으로 보임(의도된 동작).
+
+## 자가 피드백 기록 (5회)
+
+각 회차마다 코드를 다시 읽고 E2E로 실제 흐름을 돌려 결함과 UI/UX 개선점을 찾아 고쳤다. 점수는 10점 만점 자체 평가.
+
+| 회차 | 찾은 것 | 조치 | 기능 | UX | 견고성 |
+|---|---|---|---|---|---|
+| 1 | 초대 링크 참가 실패 후 "홈으로"를 누르면 게임이 없어 빈 화면에 갇힘 · 친구 기권 뒤 내 완주가 409로 거부돼 기록이 안 남음 · 대결 중 스티커가 "자유" | 기본 게임 복구 · 기권 종료 방에서도 남은 사람의 완주 허용 · "대결" 스티커, 카드 헤더 "실시간 대결" · `e2e-room-edge` 추가 | 8 | 7 | 7 |
+| 2 | 내가 먼저 완주하고 친구가 푸는 중일 때 공유 문구가 "친구가 중간에 나가서"로 오류 · SSE 280초 재접속 때 배너 깜빡임 · 끝난 방 링크가 "이미 시작된 대결"만 표시 | 기권/미완주 문구 분리 · 3초 이상 끊길 때만 배너 · 끝난 방 랜딩에 결과 카드 + 결과 링크 | 9 | 8 | 8 |
+| 3 | 먼저 완주한 쪽 결과 카드에서 친구 칸이 "—"뿐 · 기권 승리 모달이 하단에 붙어 위가 빔 · Redis 경로가 실제로 검증되지 않음 | 친구 실시간 진행 "6 / 41칸" + "친구는 아직 푸는 중" · 모달 중앙 정렬 · 도커 Redis + Upstash 호환 프록시로 RedisStore(Lua CAS) 검증, 프로덕션 빌드에서 E2E | 9 | 9 | 9 |
+| 4 | 대기 상태에서도 500ms 폴링해 Redis 낭비 · 기록 화면에서 대결 판이 자유 게임과 구분 안 됨 | 상태별 폴링(진행 500ms · 대기 1s · 종료 2s) · 히스토리에 "친구와 대결" + "대결 승/패/무" 스티커 | 9 | 9 | 9 |
+| 5 | 전체 회귀: 타입·verify·빌드·엣지/메인/기존 E2E, 375×667 로비 레이아웃 | 이상 없음. 남은 과제 아래 기록 | 9 | 9 | 9 |
+
+측정: 약 20초짜리 대결 한 판 = GET 102 · EVAL 19 · SET 21 (연결당 2 GET/s). 15분 대결이면 ~3,600 커맨드.
+
+### 남은 과제
+
+- **Upstash 프로비저닝**: Vercel CLI가 AI 에이전트의 약관 동의를 막는다(`Term acceptance cannot be performed by an AI agent`). 계정 소유자가 `https://vercel.com/<team>/~/integrations/accept-terms/upstash` 에서 동의한 뒤 `vercel integration add upstash/upstash-kv -m primaryRegion=apne1` 을 실행하면 env가 자동 주입된다. **Redis 없이 배포하면 인메모리 저장소로 떨어져 인스턴스 간 공유가 안 되므로 배포는 그 뒤에.**
+- `app/page.tsx`가 커졌다(방 상태 머신 + 게임). 다음엔 `useDuelRoom` 훅으로 방 로직을 분리하는 게 좋다.
+- SSE 폴링 → Redis pub/sub(TCP) 전환은 사용량이 늘면.
+- 대결 종료 후 "홈으로"는 같은 난이도의 오늘 데일리로 돌아간다. 이미 깬 데일리면 다시 깔린다(기존 "한 판 더"와 같은 동작). 대결 전 게임을 기억해 복귀하는 편이 더 낫다.
+
+### 로컬에서 Redis로 테스트
+
+```bash
+docker run -d --name srh-redis -p 6390:6379 redis:7-alpine
+docker run -d --name srh -p 8079:80 -e SRH_MODE=env -e SRH_TOKEN=local_token \
+  -e SRH_CONNECTION_STRING="redis://host.docker.internal:6390" hiett/serverless-redis-http:latest
+UPSTASH_REDIS_REST_URL=http://localhost:8079 UPSTASH_REDIS_REST_TOKEN=local_token npx tsx scripts/verify-room.ts
+```
