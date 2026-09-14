@@ -178,12 +178,14 @@ export async function reportProgress(
   const rec = await updateRoom(id, now, (r) => {
     seat = seatOf(r, tok);
     if (!seat) throw new RoomError(401, "참가자가 아니에요");
-    if (r.status !== "playing") {
+    // 친구가 기권해 이미 끝난 방이라도 남은 사람은 끝까지 풀어 기록을 남길 수 있다
+    if (r.status !== "playing" && !(r.status === "finished" && r.endedReason === "forfeit")) {
       if (r.status === "countdown") throw new RoomError(425, "아직 시작 전이에요");
       throw new RoomError(409, "진행 중인 대결이 아니에요");
     }
     const p = seat === "host" ? r.host : r.guest!;
     if (p.finishedAt || p.forfeit) return;
+    if (r.status === "finished" && r.endedReason !== "forfeit") return; // 둘 다 끝난 방
     const cells: number[] = [];
     let all = true;
     for (let i = 0; i < 81; i++) {

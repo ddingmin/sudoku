@@ -58,7 +58,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
             className="sticker -rotate-6"
             style={{ background: "var(--primary)", color: "var(--on-primary)" }}
           >
-            {daily ? `#${dailyNumber(dateKey)}` : "자유"}
+            {duel ? "대결" : daily ? `#${dailyNumber(dateKey)}` : "자유"}
           </span>
         </h1>
         <div className="flex items-center gap-2">

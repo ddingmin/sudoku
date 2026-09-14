@@ -61,7 +61,9 @@ async function unit() {
   const q1 = await leaveRoom(q0.id, qg, now);
   check(q1.status === "finished" && q1.endedReason === "forfeit" && q1.winner === "host" && q1.guest!.forfeit === true, "기권 → 상대 승");
   check(outcomeFor(toView(q1, "host", now), "host") === "win", "기권 승패 파생");
-  void qh;
+  // 남은 사람은 끝까지 풀어 기록을 남길 수 있다
+  const { rec: q2 } = await reportProgress(q0.id, qh, q0.solution, 0, now + 20_000);
+  check(q2.host.finishedAt === now + 20_000 && q2.winner === "host" && q2.status === "finished", "기권 뒤 완주 기록");
 
   // 연결 끊김: lastSeen이 FORFEIT_MS 넘으면 기권 처리
   const { rec: s0, token: sh } = await createRoom("normal", now);

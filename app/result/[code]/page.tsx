@@ -68,6 +68,7 @@ export default async function ResultPage({ params }: Props) {
         right={{ label: "도전자", subject: "도전자 기록이", timeSec: r.guest.timeSec, mistakes: r.guest.mistakes, hints: r.guest.hints }}
         leftWon={r.winner === "host"}
         forfeit={r.forfeit}
+        title={`실시간 대결 · ${DIFFICULTY_LABEL[r.difficulty]}`}
       />
 
       <div className="flex w-full flex-col items-center gap-2.5">

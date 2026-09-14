@@ -17,11 +17,12 @@ interface Props {
   right: DuelSide;
   leftWon: boolean; // 왼쪽이 승자인가 (시간 비교가 아니라 서버 판정을 그대로 받는다)
   forfeit?: boolean;
+  title?: string; // 헤더 오른쪽 라벨. 기본은 "#N · 난이도" / "자유 스도쿠 · 난이도"
 }
 
 const who = (label: string) => (label === "나" ? "내가" : `${label}가`);
 
-export default function DuelResultCard({ record, left, right, leftWon, forfeit }: Props) {
+export default function DuelResultCard({ record, left, right, leftWon, forfeit, title }: Props) {
   const tie = left.timeSec !== null && right.timeSec !== null && left.timeSec === right.timeSec;
 
   const side = (s: DuelSide, won: boolean) => (
@@ -65,8 +66,7 @@ export default function DuelResultCard({ record, left, right, leftWon, forfeit }
       <div className="flex items-center justify-between">
         <span className="font-display text-xl leading-none">스도쿠</span>
         <span className="text-[0.68rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-          {record.daily ? `#${dailyNumber(record.dateKey)} · ` : "자유 스도쿠 · "}
-          {DIFFICULTY_LABEL[record.difficulty]}
+          {title ?? `${record.daily ? `#${dailyNumber(record.dateKey)}` : "자유 스도쿠"} · ${DIFFICULTY_LABEL[record.difficulty]}`}
         </span>
       </div>
 

@@ -9,6 +9,7 @@ import { shareVideo } from "@/lib/shareVideo";
 import { DIFF_THEME } from "@/lib/palette";
 import { computeHighlights, highlightLines } from "@/lib/recap";
 import { DuelOutcome, OUTCOME_LABEL } from "@/lib/duelText";
+import { DIFFICULTY_LABEL } from "@/lib/sudoku";
 import ShareCard from "./ShareCard";
 import RecapBoard from "./RecapBoard";
 import DuelResultCard from "./DuelResultCard";
@@ -217,6 +218,7 @@ export default function WinModal({ record, puzzle, duel, mode = "win", onNewGame
             right={{ label: "친구", subject: "친구 기록이", timeSec: duel.rival.timeSec, mistakes: duel.rival.mistakes, hints: duel.rival.hints }}
             leftWon={duel.outcome === "win"}
             forfeit={duel.forfeit}
+            title={`실시간 대결 · ${DIFFICULTY_LABEL[record.difficulty]}`}
           />
         ) : (
           <ShareCard record={record} />

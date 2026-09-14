@@ -193,14 +193,16 @@ export default function Home() {
 
   // 진행 전송: 보드가 바뀔 때마다 (완성 시엔 즉시)
   useEffect(() => {
-    if (!state?.room || !view || state.room !== view.id || view.status !== "playing" || myPlayer?.finishedAt) return;
+    if (!state?.room || !view || state.room !== view.id || myPlayer?.finishedAt) return;
+    if (view.status !== "playing" && !(view.status === "finished" && view.endedReason === "forfeit")) return;
     room.sendProgress(state.values, state.mistakes, state.status === "won");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.values, state?.mistakes, state?.status]);
 
   // 완성했는데 서버 확인이 늦으면 2초마다 재전송
   useEffect(() => {
-    if (!state?.room || state.status !== "won" || myPlayer?.finishedAt || !view || view.status !== "playing") return;
+    if (!state?.room || state.status !== "won" || myPlayer?.finishedAt || !view) return;
+    if (view.status !== "playing" && !(view.status === "finished" && view.endedReason === "forfeit")) return;
     const t = setInterval(() => room.sendProgress(state.values, state.mistakes, true), 2000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -501,6 +503,7 @@ export default function Home() {
                 setLobby(null);
                 setLobbyError(null);
                 if (roomId && !inRoom) setRoomId(null);
+                if (!state) startNewGame("normal", true); // 초대 링크로 들어왔다 실패한 경우 — 빈 화면에 갇히지 않게
               }
             }}
           />
