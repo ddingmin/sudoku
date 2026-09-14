@@ -179,8 +179,16 @@ export default function StatsPanel({ stats, onOpenRecord, onClose }: StatsPanelP
                           BEST
                         </span>
                       )}
+                      {h.duel && (
+                        <span
+                          className="sticker ml-2 -rotate-3"
+                          style={{ background: h.duel === "win" ? "var(--pop)" : "var(--surface-dim)", color: "var(--ink)", fontSize: "0.55rem", padding: "3px 6px" }}
+                        >
+                          대결 {h.duel === "win" ? "승" : h.duel === "lose" ? "패" : "무"}
+                        </span>
+                      )}
                       <span className="ml-1.5 inline-block whitespace-nowrap text-[0.66rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-                        {h.daily ? "오늘의 스도쿠" : "자유"} · {h.dateKey.replace(/-/g, ".")}
+                        {h.duel ? "친구와 대결" : h.daily ? "오늘의 스도쿠" : "자유"} · {h.dateKey.replace(/-/g, ".")}
                       </span>
                     </p>
                     <p className="tabular mt-1.5 flex items-center gap-3 text-[0.72rem] font-bold" style={{ color: "var(--ink-soft)" }}>

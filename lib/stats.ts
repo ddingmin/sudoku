@@ -16,6 +16,7 @@ export interface GameResult {
   finishedAt: number; // epoch ms
   seed?: number; // 리플레이용
   moves?: Move[]; // 리플레이용
+  duel?: "win" | "lose" | "tie"; // 실시간 대결 판이면 결과
 }
 
 // 하루의 데일리 클리어: 난이도 → 최단 시간(초). 0 = 시간 미상(복원 데이터)

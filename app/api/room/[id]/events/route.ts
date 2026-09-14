@@ -2,13 +2,15 @@
 // 저장소를 500ms 간격으로 확인한다(인스턴스 간 공유가 없어 pub/sub 대신 폴링).
 // 연결이 살아 있는 동안 내 lastSeen을 갱신 — 이것이 상대에게 보이는 "접속 중" 신호.
 import { NextRequest } from "next/server";
-import { SSE_MAX_MS, SSE_POLL_MS, SSE_TOUCH_MS } from "@/lib/room";
+import { RoomStatus, SSE_MAX_MS, SSE_POLL_DONE_MS, SSE_POLL_IDLE_MS, SSE_POLL_MS, SSE_TOUCH_MS } from "@/lib/room";
 import { readRoom, seatOf, toView, touch } from "@/lib/roomServer";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const enc = new TextEncoder();
+// 상태별 폴링 간격 — Redis 커맨드 수를 진행 중일 때만 촘촘히 쓴다
+const pollFor = (s: RoomStatus) => (s === "playing" ? SSE_POLL_MS : s === "finished" || s === "abandoned" ? SSE_POLL_DONE_MS : SSE_POLL_IDLE_MS);
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -60,8 +62,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             lastPing = now;
             send("ping", { now });
           }
-          // 끝난 방은 마지막 스냅샷 뒤 재대결 안내를 위해 잠시 더 유지하되 폴링은 느리게
-          await sleep(rec.status === "finished" || rec.status === "abandoned" ? SSE_POLL_MS * 4 : SSE_POLL_MS);
+          await sleep(pollFor(rec.status));
         } catch (e) {
           console.error("[sse]", e);
           await sleep(SSE_POLL_MS * 2);

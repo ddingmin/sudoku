@@ -104,6 +104,14 @@ async function main() {
   await b.getByText("친구를 기다리는 중").waitFor({ timeout: 10000 });
   console.log("재대결 방 생성 OK");
 
+  // B: 재대결 취소 → 기록 화면에 "대결 승" 표시
+  await b.getByRole("button", { name: "대결 취소" }).click();
+  await b.waitForTimeout(800);
+  await b.getByRole("button", { name: "기록 보기" }).click();
+  await b.getByText("대결 승").waitFor({ timeout: 5000 });
+  console.log("기록에 대결 승 표시 OK");
+  await b.screenshot({ path: `${OUT}/room-b-stats.png` });
+
   await browser.close();
   console.log("E2E ROOM DONE");
 }

@@ -227,6 +227,7 @@ export default function Home() {
       finishedAt: Date.now(),
       seed,
       moves: getMoves(),
+      duel: state.room && view ? (outcomeFor(view, me) ?? undefined) : undefined,
     });
     setStats(s);
     const t = setTimeout(() => setWinRecord(record), 1500);
