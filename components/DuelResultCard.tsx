@@ -6,9 +6,10 @@ import { verdictText } from "@/lib/duelText";
 export interface DuelSide {
   label: string; // "나" / "친구"
   subject: string; // 승패 문장의 주어: "내 기록이" / "친구 기록이"
-  timeSec: number | null; // null = 완주하지 못함(기권·이탈)
+  timeSec: number | null; // null = 아직 완주하지 않음(진행 중·기권·이탈)
   mistakes: number;
   hints: number;
+  progress?: string; // 완주 전이면 시간 자리에 보여줄 진행 ("31 / 47칸")
 }
 
 interface Props {
@@ -46,7 +47,15 @@ export default function DuelResultCard({ record, left, right, leftWon, forfeit, 
       <span className="text-[0.62rem] font-extrabold tracking-widest" style={{ opacity: 0.8 }}>
         {s.label}
       </span>
-      <span className="font-display tabular text-[1.9rem] leading-none">{s.timeSec !== null ? formatTime(s.timeSec) : "—"}</span>
+      {s.timeSec !== null ? (
+        <span className="font-display tabular text-[1.9rem] leading-none">{formatTime(s.timeSec)}</span>
+      ) : s.progress ? (
+        <span className="tabular flex h-[1.9rem] items-center text-[0.95rem] font-extrabold" style={{ opacity: 0.9 }}>
+          {s.progress}
+        </span>
+      ) : (
+        <span className="font-display tabular text-[1.9rem] leading-none">—</span>
+      )}
       <span className="tabular text-[0.66rem] font-bold" style={{ opacity: 0.85 }}>
         실수 {s.mistakes} · 힌트 {s.hints}
       </span>
@@ -85,7 +94,7 @@ export default function DuelResultCard({ record, left, right, leftWon, forfeit, 
           ? verdictText(left.timeSec, right.timeSec, left.subject, right.subject)
           : forfeit
             ? `${who(leftWon ? right.label : left.label)} 중간에 나갔어요`
-            : `${who(leftWon ? left.label : right.label)} 먼저 다 풀었어요`}
+            : `${who(leftWon ? left.label : right.label)} 먼저 다 풀었어요${(leftWon ? right : left).progress ? ", 친구는 아직 푸는 중" : ""}`}
       </p>
     </div>
   );

@@ -233,6 +233,19 @@ export default function Home() {
     return () => clearTimeout(t);
   }, [state?.status, myPlayer?.finishedAt]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 내 진행 (정답 칸 / 채울 칸)
+  const progress = useMemo(() => {
+    if (!state) return null;
+    let mine = 0;
+    let total = 0;
+    for (let i = 0; i < 81; i++) {
+      if (state.given[i]) continue;
+      total++;
+      if (state.values[i] === state.solution[i]) mine++;
+    }
+    return { mine, total };
+  }, [state]);
+
   // 결과 모달용 대결 정보
   const duelInfo: DuelInfo | null = useMemo(() => {
     if (!view || !state?.room || state.room !== view.id || !rival) return null;
@@ -244,7 +257,13 @@ export default function Home() {
     const waitingRematch = !!view.rematchId;
     return {
       outcome,
-      rival: { timeSec: playerTimeSec(view, opponentOf(me)), mistakes: rival.mistakes, hints: rival.hints },
+      rival: {
+        timeSec: playerTimeSec(view, opponentOf(me)),
+        mistakes: rival.mistakes,
+        hints: rival.hints,
+        // 아직 푸는 중이면 실시간 진행을 시간 자리에
+        progress: !rival.finishedAt && !rival.forfeit && progress ? `${rival.cells.length} / ${progress.total}칸` : undefined,
+      },
       forfeit: view.endedReason === "forfeit",
       shareUrl: url,
       shareText: resultShareText(label, playerTimeSec(view, me), playerTimeSec(view, opponentOf(me)), outcome, view.endedReason === "forfeit"),
@@ -261,7 +280,7 @@ export default function Home() {
       },
       onExit: () => exitRoom(false),
     };
-  }, [view, state?.room, rival, me, rematchPending, room, goRoom, exitRoom]);
+  }, [view, state?.room, rival, me, rematchPending, room, goRoom, exitRoom, progress]);
 
   // 내 기록 없이 끝난 대결 (친구 이탈로 승리 · 방 만료)
   const roomEnd = useMemo(() => {
@@ -276,17 +295,6 @@ export default function Home() {
 
   // 친구 마커·진행
   const rivalCells = useMemo(() => (rival ? new Set(rival.cells) : null), [rival]);
-  const progress = useMemo(() => {
-    if (!state) return null;
-    let mine = 0;
-    let total = 0;
-    for (let i = 0; i < 81; i++) {
-      if (state.given[i]) continue;
-      total++;
-      if (state.values[i] === state.solution[i]) mine++;
-    }
-    return { mine, total };
-  }, [state]);
   const inRoom = !!state?.room && !!view && state.room === view.id;
   const presence = view && inRoom ? rivalPresence(view, me, now) : "absent";
   const showCountdown = inRoom && view!.startAt !== undefined && (view!.status === "countdown" || now < view!.startAt + 700) && now < view!.startAt + 700;

@@ -17,7 +17,7 @@ import DuelResultCard from "./DuelResultCard";
 // 실시간 대결 결과 — 판정은 서버가 내린 것을 그대로 받는다
 export interface DuelInfo {
   outcome: DuelOutcome;
-  rival: { timeSec: number | null; mistakes: number; hints: number };
+  rival: { timeSec: number | null; mistakes: number; hints: number; progress?: string };
   forfeit: boolean;
   shareUrl: string; // /result/<code>
   shareText: string;
@@ -215,7 +215,7 @@ export default function WinModal({ record, puzzle, duel, mode = "win", onNewGame
           <DuelResultCard
             record={record}
             left={{ label: "나", subject: "내 기록이", timeSec: record.timeSec, mistakes: record.mistakes, hints: record.hints }}
-            right={{ label: "친구", subject: "친구 기록이", timeSec: duel.rival.timeSec, mistakes: duel.rival.mistakes, hints: duel.rival.hints }}
+            right={{ label: "친구", subject: "친구 기록이", timeSec: duel.rival.timeSec, mistakes: duel.rival.mistakes, hints: duel.rival.hints, progress: duel.rival.progress }}
             leftWon={duel.outcome === "win"}
             forfeit={duel.forfeit}
             title={`실시간 대결 · ${DIFFICULTY_LABEL[record.difficulty]}`}

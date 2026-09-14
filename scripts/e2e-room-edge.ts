@@ -4,7 +4,7 @@ import { chromium, Page } from "playwright-core";
 import { generatePuzzle } from "../lib/sudoku";
 
 const OUT = process.env.OUT_DIR ?? ".";
-const BASE = "http://localhost:3000";
+const BASE = process.env.BASE ?? "http://localhost:3000";
 const noShare = () => Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
 
 async function fill(page: Page, puzzle: number[], solution: number[], count: number, from = 0) {

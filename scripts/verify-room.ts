@@ -98,7 +98,7 @@ async function unit() {
 }
 
 async function http() {
-  const BASE = "http://localhost:3000";
+  const BASE = process.env.BASE ?? "http://localhost:3000";
   const up = await fetch(BASE, { signal: AbortSignal.timeout(2000) }).then((r) => r.ok).catch(() => false);
   if (!up) { console.log("(dev 서버 없음 — HTTP 검증 생략)"); return; }
   const c = await fetch(`${BASE}/api/room`, { method: "POST", body: JSON.stringify({ difficulty: "easy" }) }).then((r) => r.json());
