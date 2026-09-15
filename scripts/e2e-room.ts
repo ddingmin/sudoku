@@ -51,7 +51,7 @@ async function main() {
   await b.goto(url, { waitUntil: "networkidle" });
   await b.screenshot({ path: `${OUT}/room-b-landing.png`, fullPage: true });
   const og = await b.locator('meta[property="og:image"]').getAttribute("content");
-  if (og) console.log("초대 OG:", (await b.request.get(og)).status());
+  if (og) console.log("초대 OG:", og, await b.request.get(og).then((r) => r.status()).catch((e) => `조회 실패 (${String(e).split("\n")[0]})`));
   await b.getByRole("link", { name: "참가하기" }).click();
   await b.waitForURL((u) => u.pathname === "/");
 
@@ -97,7 +97,7 @@ async function main() {
   console.log("결과 페이지:", res?.status(), await a.title());
   await a.screenshot({ path: `${OUT}/room-result.png`, fullPage: true });
   const og2 = await a.locator('meta[property="og:image"]').getAttribute("content");
-  if (og2) console.log("결과 OG:", (await a.request.get(og2)).status());
+  if (og2) console.log("결과 OG:", og2, await a.request.get(og2).then((r) => r.status()).catch((e) => `조회 실패 (${String(e).split("\n")[0]})`));
 
   // B: 다시 붙기 → 새 방 대기
   await b.getByRole("button", { name: "다시 붙기" }).click();
