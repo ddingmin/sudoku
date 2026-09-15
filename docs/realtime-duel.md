@@ -141,7 +141,7 @@ Player: { token, cells: number[], mistakes, hints, finishedAt?, forfeit?, lastSe
 
 ### 남은 과제
 
-- **Upstash 프로비저닝**: Vercel CLI가 AI 에이전트의 약관 동의를 막는다(`Term acceptance cannot be performed by an AI agent`). 계정 소유자가 `https://vercel.com/<team>/~/integrations/accept-terms/upstash` 에서 동의한 뒤 `vercel integration add upstash/upstash-kv -m primaryRegion=apne1` 을 실행하면 env가 자동 주입된다. **Redis 없이 배포하면 인메모리 저장소로 떨어져 인스턴스 간 공유가 안 되므로 배포는 그 뒤에.**
+- ~~Upstash 프로비저닝~~ 완료: `sudoku-rooms`(hnd1) 리소스가 프로젝트에 연결되어 `KV_REST_API_URL`/`KV_REST_API_TOKEN`이 주입된다. 로컬은 `vercel env pull`로 `.env.local`을 받으면 Redis, 없으면 인메모리. 약관 동의는 Vercel CLI가 AI 에이전트를 막아 브라우저 세션으로 진행했다.
 - `app/page.tsx`가 커졌다(방 상태 머신 + 게임). 다음엔 `useDuelRoom` 훅으로 방 로직을 분리하는 게 좋다.
 - SSE 폴링 → Redis pub/sub(TCP) 전환은 사용량이 늘면.
 - 대결 종료 후 "홈으로"는 같은 난이도의 오늘 데일리로 돌아간다. 이미 깬 데일리면 다시 깔린다(기존 "한 판 더"와 같은 동작). 대결 전 게임을 기억해 복귀하는 편이 더 낫다.
