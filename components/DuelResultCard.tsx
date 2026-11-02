@@ -39,12 +39,12 @@ export default function DuelResultCard({ record, left, right, leftWon, forfeit, 
       {won && (
         <span
           className="sticker absolute -top-3 -right-2 rotate-6"
-          style={{ background: "var(--pop)", color: "var(--on-pop)", fontSize: "0.62rem", padding: "5px 9px" }}
+          style={{ background: "var(--pop)", color: "var(--on-pop)", fontSize: "0.72rem", padding: "5px 9px" }}
         >
           WIN
         </span>
       )}
-      <span className="text-[0.62rem] font-extrabold tracking-widest" style={{ opacity: 0.8 }}>
+      <span className="text-[0.72rem] font-extrabold" style={{ opacity: 0.8 }}>
         {s.label}
       </span>
       {s.timeSec !== null ? (
@@ -56,7 +56,7 @@ export default function DuelResultCard({ record, left, right, leftWon, forfeit, 
       ) : (
         <span className="font-display tabular text-[1.9rem] leading-none">—</span>
       )}
-      <span className="tabular text-[0.66rem] font-bold" style={{ opacity: 0.85 }}>
+      <span className="tabular text-[0.75rem] font-bold" style={{ opacity: 0.9 }}>
         실수 {s.mistakes} · 힌트 {s.hints}
       </span>
     </div>
@@ -74,7 +74,7 @@ export default function DuelResultCard({ record, left, right, leftWon, forfeit, 
     >
       <div className="flex items-center justify-between">
         <span className="font-display text-xl leading-none">스도쿠</span>
-        <span className="text-[0.68rem] font-bold" style={{ color: "var(--ink-faint)" }}>
+        <span className="text-[0.75rem] font-bold" style={{ color: "var(--ink-faint)" }}>
           {title ?? `${record.daily ? `#${dailyNumber(record.dateKey)}` : "자유 스도쿠"} · ${DIFFICULTY_LABEL[record.difficulty]}`}
         </span>
       </div>

@@ -348,56 +348,49 @@ export default function Home() {
   const difficulty = state?.difficulty ?? view?.difficulty ?? "normal";
 
   return (
-    <main
-      data-difficulty={difficulty}
-      className="mx-auto flex min-h-dvh w-full max-w-lg flex-col items-center gap-4 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))]"
-    >
+    <main data-difficulty={difficulty} className="game">
       {state ? (
         <>
-          <Header
-            difficulty={state.difficulty}
-            daily={state.daily}
-            dateKey={state.dateKey}
-            elapsed={state.elapsed}
-            mistakes={state.mistakes}
-            duel={inRoom}
-            onNewGame={onHeaderNewGame}
-            onOpenDuel={() => {
-              setLobbyError(null);
-              setLobby("pick");
-            }}
-            onOpenStats={() => {
-              setStats(loadStats());
-              setStatsOpen(true);
-            }}
-          />
+          <div className="game-top">
+            <Header
+              difficulty={state.difficulty}
+              daily={state.daily}
+              dateKey={state.dateKey}
+              elapsed={state.elapsed}
+              mistakes={state.mistakes}
+              duel={inRoom}
+              onNewGame={onHeaderNewGame}
+              onOpenDuel={() => {
+                setLobbyError(null);
+                setLobby("pick");
+              }}
+              onOpenStats={() => {
+                setStats(loadStats());
+                setStatsOpen(true);
+              }}
+            />
 
-          <AnimatePresence>
-            {inRoom && presence === "finished" && !myPlayer?.finishedAt && (
-              <RoomBanner key="rival-done" tone="info">
-                친구가 먼저 다 풀었어요. 끝까지 풀면 내 기록도 남아요.
-              </RoomBanner>
-            )}
-            {inRoom && presence === "stale" && view!.status === "playing" && (
-              <RoomBanner key="stale" tone="warn">
-                친구 연결이 끊겼어요. 1분 안에 돌아오지 않으면 승리로 처리돼요.
-              </RoomBanner>
-            )}
-            {inRoom && room.connection === "reconnecting" && room.reconnectingFor > 3000 && (
-              <RoomBanner key="reconnect" tone="warn">
-                서버와 다시 연결하는 중이에요.
-              </RoomBanner>
-            )}
-          </AnimatePresence>
+            <AnimatePresence>
+              {inRoom && presence === "finished" && !myPlayer?.finishedAt && (
+                <RoomBanner key="rival-done" tone="info">
+                  친구가 먼저 다 풀었어요. 끝까지 풀면 내 기록도 남아요.
+                </RoomBanner>
+              )}
+              {inRoom && presence === "stale" && view!.status === "playing" && (
+                <RoomBanner key="stale" tone="warn">
+                  친구 연결이 끊겼어요. 1분 안에 돌아오지 않으면 승리로 처리돼요.
+                </RoomBanner>
+              )}
+              {inRoom && room.connection === "reconnecting" && room.reconnectingFor > 3000 && (
+                <RoomBanner key="reconnect" tone="warn">
+                  서버와 다시 연결하는 중이에요.
+                </RoomBanner>
+              )}
+            </AnimatePresence>
+          </div>
 
-          <div className="flex w-full flex-1 items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="mx-auto w-full"
-              style={{ maxWidth: "min(100%, calc(100dvh - 330px))" }}
-            >
+          <div className="game-board">
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
               <Board
                 values={state.values}
                 notes={state.notes}
@@ -411,41 +404,42 @@ export default function Home() {
             </motion.div>
           </div>
 
-          <div className="flex w-full flex-col gap-2.5">
+          <div className="game-bottom">
             <Controls
               noteMode={state.noteMode}
               hintsUsed={state.hintsUsed}
               hintsDisabled={inRoom}
               onUndo={undo}
-              onErase={erase}
               onToggleNote={toggleNoteMode}
               onHint={hint}
             />
-            <NumberPad remaining={remaining} noteMode={state.noteMode} onInput={input} />
-          </div>
+            <NumberPad remaining={remaining} noteMode={state.noteMode} onInput={input} onErase={erase} />
 
-          {/* 대결 중엔 푸터 자리에 진행 스트립 — 보드 높이 예산은 일반 모드와 동일 */}
-          {inRoom && progress && rival ? (
-            <DuelBar
-              mine={progress.mine}
-              rival={rival.cells.length}
-              total={progress.total}
-              rivalTimeSec={playerTimeSec(view!, opponentOf(me))}
-              rivalPresence={presence}
-            />
-          ) : (
-            <div className="flex items-center justify-center gap-2 pb-1">
-              <span className="checker h-2 w-11" />
-              <p className="text-center text-[0.65rem] font-bold" style={{ color: "var(--ink-faint)" }}>
-                매일 자정 새 문제
-              </p>
-              <span className="checker h-2 w-11" />
-            </div>
-          )}
+            {/* 대결 중엔 푸터 자리에 진행 스트립 */}
+            {inRoom && progress && rival ? (
+              <DuelBar
+                mine={progress.mine}
+                rival={rival.cells.length}
+                total={progress.total}
+                rivalTimeSec={playerTimeSec(view!, opponentOf(me))}
+                rivalPresence={presence}
+              />
+            ) : (
+              <div className="flex items-center justify-center gap-2 pt-1">
+                <span className="checker h-2 w-11" />
+                {state.daily && (
+                  <p className="text-center text-[0.75rem] font-bold" style={{ color: "var(--ink-faint)" }}>
+                    매일 자정 새 문제
+                  </p>
+                )}
+                <span className="checker h-2 w-11" />
+              </div>
+            )}
+          </div>
         </>
       ) : (
         // 퍼즐 생성 중 스켈레톤
-        <div className="flex min-h-dvh w-full flex-col items-center justify-center gap-4">
+        <div className="flex h-full w-full flex-col items-center justify-center gap-4" style={{ gridColumn: "1 / -1" }}>
           <motion.div animate={{ opacity: [0.4, 1, 0.4], rotate: [0, 90, 90] }} transition={{ repeat: Infinity, duration: 1.6 }}>
             <Emblem size={44} />
           </motion.div>

@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* 넓은 화면: 가로 방향 폭 640px 이상 또는 폭 1024px 이상 → 보드 + 오른쪽 레일 2단 */
+@custom-variant wide {
+  @media (min-width: 1024px), (min-width: 640px) and (orientation: landscape) {
+    @slot;
+  }
+}
+
 /* ═══════════════════════════════════════════════════
    스도쿠 디자인 시스템 — "키치 팝" (A1 하이퍼블루 + 라임)
    레이어 1: 원시 토큰(색·타이포·반경·섀도)
@@ -14,7 +21,7 @@
   --surface-dim: #f1eee6;
   --ink: #141414; /* 메인 잉크 — 텍스트/보더/하드섀도 */
   --ink-soft: #5a574e;
-  --ink-faint: #9b978c;
+  --ink-faint: #6f6b61; /* --ground 위 4.5:1 이상 */
 
   /* ── 색: 포인트 ── */
   --primary: #2b4cff; /* 하이퍼블루 — 사용자 숫자/CTA/뱃지 */
@@ -25,6 +32,7 @@
   --pop: #c8f04d; /* 라임 — 선택 셀/형광 하이라이트 */
   --on-pop: #141414;
   --danger: #e93a5e; /* 체리 — 오답/신기록 스티커 */
+  --on-danger: #ffffff; /* --danger 면 위 글자 */
   --danger-wash: #ffdde4;
   --swipe-bg: var(--pop); /* 형광펜 스와이프 — 다크에선 워시로 낮춤 */
 
@@ -34,7 +42,8 @@
   --on-flood: #ffffff;
 
   /* ── 색: 라인 ── */
-  --cell-line: #ece9e0; /* 셀 헤어라인 */
+  --cell-line: #dcd8cb; /* 셀 헤어라인 */
+  --scrim: rgb(20 20 20 / 0.5); /* 모달 뒤 플랫 스크림(블러 없음) */
   --box-line: #141414; /* 3x3 박스 구분선 */
   --edge: #141414; /* 청키 보더 */
   --shadow-ink: #141414; /* 하드 섀도 잉크 */
@@ -64,7 +73,7 @@
     --surface-dim: #191a1f;
     --ink: #f2efe6;
     --ink-soft: #b9b6aa;
-    --ink-faint: #77746a;
+    --ink-faint: #8f8c80;
     --primary: #5d7cff;
     --primary-strong: #3d5be8;
     --on-primary: #14151a;
@@ -73,9 +82,11 @@
     --pop: #c8f04d;
     --on-pop: #141414;
     --danger: #ff5470;
+    --on-danger: #14151a;
     --danger-wash: #3d1e28;
     --swipe-bg: rgba(200, 240, 77, 0.3);
-    --cell-line: #2c2e35;
+    --cell-line: #3a3d46;
+    --scrim: rgb(0 0 0 / 0.6);
     --box-line: #8b887c;
     --edge: #edeae0;
     --shadow-ink: #8b887c; /* 딤 아이보리 — 다크에선 밝은 하드 섀도(프린트 오프셋 룩) */
@@ -88,7 +99,7 @@
   --surface-dim: #191a1f;
   --ink: #f2efe6;
   --ink-soft: #b9b6aa;
-  --ink-faint: #77746a;
+  --ink-faint: #8f8c80;
   --primary: #5d7cff;
   --primary-strong: #3d5be8;
   --on-primary: #14151a;
@@ -97,9 +108,11 @@
   --pop: #c8f04d;
   --on-pop: #141414;
   --danger: #ff5470;
+  --on-danger: #14151a;
   --danger-wash: #3d1e28;
   --swipe-bg: rgba(200, 240, 77, 0.3);
-  --cell-line: #2c2e35;
+  --cell-line: #3a3d46;
+  --scrim: rgb(0 0 0 / 0.6);
   --box-line: #8b887c;
   --edge: #edeae0;
   --shadow-ink: #8b887c; /* 딤 아이보리 — 다크에선 밝은 하드 섀도(프린트 오프셋 룩) */
@@ -201,6 +214,44 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* 플랫 박스: 보더만, 섀도 없음(도구 버튼·띠·보조 컨테이너). 하드 섀도는 보드·숫자 키·주 CTA·스티커·떠 있는 메뉴/모달에만 */
+.flat-box {
+  background: var(--surface);
+  border: 2px solid var(--edge);
+  border-radius: var(--r-sm);
+  transition: background-color 0.12s ease;
+}
+button.flat-box:active:not(:disabled) {
+  background: var(--surface-dim);
+}
+button.flat-box:disabled {
+  color: var(--ink-faint);
+  border-color: var(--cell-line);
+}
+
+/* 보더·섀도 없는 아이콘 버튼 — 44px 터치 영역, hover/press는 면으로 */
+.icon-btn {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-md);
+  transition: background-color 0.12s ease;
+}
+.icon-btn:hover,
+.icon-btn:active {
+  background: var(--surface-dim);
+}
+
+/* 숫자 키: 청키 + 하드 섀도. 완료되면 섀도를 빼 눌러지지 않음을 보이되 숫자는 읽히게 */
+.key:disabled {
+  box-shadow: none;
+  transform: none;
+  border-color: var(--cell-line);
+}
+
 .chunky-press {
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
@@ -212,7 +263,7 @@ body {
 /* 스티커: 회전된 작은 뱃지 */
 .sticker {
   display: inline-block;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
   padding: 5px 9px;
   border-radius: 9px;
@@ -354,6 +405,96 @@ body {
 :focus-visible {
   outline: 2.5px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* 보드 칸: overflow-hidden에 잘리지 않게 안쪽 윤곽선 */
+.cell:focus-visible {
+  outline-offset: -3px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══ 게임 화면 레이아웃 ═══
+   단일 열(세로): 헤더 → 보드 → 하단 조작부. 보드는 남는 높이에 맞춰 줄고, 남는 높이는 숫자 키가 흡수한다.
+   넓은 화면: 왼쪽 보드 + 오른쪽 레일. */
+.game {
+  --rail: clamp(280px, 38vw, 340px);
+  --gap: clamp(16px, 3vw, 40px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+  max-width: 720px;
+  height: 100dvh;
+  margin-inline: auto;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1rem max(0.75rem, env(safe-area-inset-bottom));
+}
+.game-top {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 8px;
+}
+.game-board {
+  flex: 0 1 auto;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 1;
+  container-type: size;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.game-board > * {
+  width: min(100cqw, 100cqh);
+}
+.game-bottom {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.game-pad {
+  flex: 1 1 auto;
+  min-height: calc(2 * var(--key-min, 52px) + 8px);
+  max-height: 224px;
+}
+
+@media (min-width: 1024px), (min-width: 640px) and (orientation: landscape) {
+  .game {
+    --board: min(800px, calc(100dvh - 3rem), calc(100vw - var(--rail) - var(--gap) - 3rem));
+    display: grid;
+    grid-template-columns: var(--board) var(--rail);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "board top" "board bottom";
+    column-gap: var(--gap);
+    align-content: center;
+    justify-content: center;
+    max-width: none;
+    padding: 1.5rem;
+  }
+  .game-top {
+    grid-area: top;
+  }
+  .game-board {
+    grid-area: board;
+    width: var(--board);
+    height: var(--board);
+    aspect-ratio: auto;
+  }
+  .game-bottom {
+    grid-area: bottom;
+    gap: 8px;
+  }
+  .game-pad {
+    flex: none;
+    min-height: 0;
+    max-height: none;
+    --key-h: clamp(36px, calc((100dvh - 21rem) / 4), 72px);
+    grid-auto-rows: var(--key-h);
+  }
 }
 
 button {

@@ -44,7 +44,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
     return () => window.removeEventListener("pointerdown", close);
   }, [menuOpen]);
 
-  const iconBtn = "chunky-sm chunky-press flex h-10 w-10 items-center justify-center";
+  const iconBtn = "icon-btn";
 
   return (
     <header className="w-full">
@@ -61,9 +61,9 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
             {duel ? "대결" : daily ? `#${dailyNumber(dateKey)}` : "자유"}
           </span>
         </h1>
-        <div className="flex items-center gap-2">
+        <div className="-mr-2 flex items-center">
           <button onClick={onOpenDuel} aria-label="친구와 대결" className={iconBtn} style={{ color: duel ? "var(--on-pop)" : "var(--ink)", background: duel ? "var(--pop)" : undefined }}>
-            <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="m14.5 17.5 3-3" />
               <path d="M3 21l6-6" />
               <path d="m14 5 5 5" />
@@ -74,7 +74,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
             </svg>
           </button>
           <button onClick={onOpenStats} aria-label="기록 보기" className={iconBtn} style={{ color: "var(--ink)" }}>
-            <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M4 20v-6" />
               <path d="M10 20V8" />
               <path d="M16 20v-9" />
@@ -82,7 +82,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
             </svg>
           </button>
           <button onClick={toggle} aria-label="테마 전환" className={iconBtn} style={{ color: "var(--ink)" }}>
-            <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
             </svg>
           </button>
@@ -90,12 +90,12 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
       </div>
 
       {/* 상태 라인 */}
-      <div className="mt-3.5 flex items-center justify-between">
+      <div className="mt-1 flex items-center justify-between">
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen((o) => !o)}
             aria-expanded={menuOpen}
-            className="chunky-sm chunky-press flex items-center gap-1.5 rounded-full! py-2 pl-3.5 pr-2.5 text-[0.78rem] font-extrabold"
+            className="flat-box flex h-10 items-center gap-1.5 rounded-full! pl-3.5 pr-2.5 text-[0.8rem] font-extrabold"
             style={{ color: "var(--ink)" }}
           >
             {duel ? "친구와 대결" : daily ? "오늘의 스도쿠" : "자유 스도쿠"}
@@ -116,7 +116,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
               >
                 {[true, false].map((isDaily) => (
                   <div key={String(isDaily)}>
-                    <p className="px-2.5 pb-1 pt-2 text-[0.62rem] font-extrabold uppercase tracking-wider" style={{ color: "var(--ink-faint)" }}>
+                    <p className="px-2.5 pb-1 pt-2 text-[0.75rem] font-extrabold" style={{ color: "var(--ink-faint)" }}>
                       {isDaily ? `오늘의 스도쿠 · ${dateKey}` : "자유 스도쿠 · 무작위"}
                     </p>
                     {DIFFICULTIES.map((d) => {
@@ -151,14 +151,21 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-[0.85rem] font-extrabold" aria-label={`실수 ${mistakes}회`}>
-            <span style={{ color: mistakes > 0 ? "var(--danger)" : "var(--ink-faint)" }}>✕</span>
+          <span className="flex items-center gap-1 text-[0.9rem] font-extrabold" aria-label={`실수 ${mistakes}회`}>
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke={mistakes > 0 ? "var(--danger)" : "var(--ink-faint)"} strokeWidth="3.5" strokeLinecap="round" aria-hidden>
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
             <span className="tabular" style={{ color: "var(--ink)" }}>
               {mistakes}
             </span>
           </span>
+          {/* Bagel Fat One은 tabular-nums를 지원하지 않아(자폭 0.47~0.69em) 글자별 고정폭으로 흔들림을 막는다 */}
           <span className="font-display tabular text-[1.4rem] leading-none" style={{ color: "var(--ink)" }}>
-            {formatTime(elapsed)}
+            {[...formatTime(elapsed)].map((ch, i) => (
+              <span key={i} className="inline-block text-center" style={{ width: ch === ":" ? "0.36em" : "0.7em" }}>
+                {ch}
+              </span>
+            ))}
           </span>
         </div>
       </div>

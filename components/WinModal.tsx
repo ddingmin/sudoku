@@ -194,12 +194,11 @@ export default function WinModal({ record, puzzle, duel, mode = "win", onNewGame
               background: "var(--surface)",
               border: "2px solid var(--edge)",
               borderRadius: "var(--r-lg)",
-              boxShadow: "var(--shadow-md)",
             }}
           >
             <RecapBoard puzzle={puzzle} moves={record.moves} size={128} />
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <p className="text-[0.66rem] font-extrabold tracking-widest" style={{ color: "var(--ink-faint)" }}>
+              <p className="text-[0.75rem] font-extrabold" style={{ color: "var(--ink-faint)" }}>
                 풀이 리캡
               </p>
               {highlightLines(computeHighlights(record.moves), record.mistakes, record.hints).map((line) => (
@@ -242,8 +241,8 @@ export default function WinModal({ record, puzzle, duel, mode = "win", onNewGame
               </button>
               <button
                 onClick={shareResult}
-                className="chunky chunky-press flex items-center justify-center gap-2 py-3 text-[0.9rem] font-extrabold"
-                style={{ color: "var(--ink)", boxShadow: "var(--shadow-md)" }}
+                className="flat-box flex items-center justify-center gap-2 py-3 text-[0.9rem] font-extrabold"
+                style={{ color: "var(--ink)" }}
               >
                 <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
@@ -286,7 +285,7 @@ export default function WinModal({ record, puzzle, duel, mode = "win", onNewGame
             <button
               onClick={saveImage}
               disabled={busy}
-              className="chunky-sm chunky-press flex flex-1 items-center justify-center gap-1.5 py-3 text-[0.78rem] font-extrabold disabled:opacity-60"
+              className="flat-box flex flex-1 items-center justify-center gap-1.5 py-3 text-[0.8rem] font-extrabold disabled:opacity-60"
               style={{ color: "var(--ink)" }}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -298,7 +297,7 @@ export default function WinModal({ record, puzzle, duel, mode = "win", onNewGame
             </button>
             <button
               onClick={() => copyToClipboard(shareText(record, shareUrl()), "기록을 복사했어요")}
-              className="chunky-sm chunky-press flex flex-1 items-center justify-center gap-1.5 py-3 text-[0.78rem] font-extrabold"
+              className="flat-box flex flex-1 items-center justify-center gap-1.5 py-3 text-[0.8rem] font-extrabold"
               style={{ color: "var(--ink)" }}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -310,7 +309,7 @@ export default function WinModal({ record, puzzle, duel, mode = "win", onNewGame
             <button
               onClick={shareToX}
               aria-label="X에 공유"
-              className="chunky-sm chunky-press flex w-14 items-center justify-center"
+              className="flat-box flex w-14 items-center justify-center"
               style={{ color: "var(--ink)" }}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">

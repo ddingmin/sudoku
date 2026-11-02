@@ -13,7 +13,7 @@ async function main() {
     permissions: ["clipboard-read", "clipboard-write"],
   });
   const page = await ctx.newPage();
-  await page.goto("http://localhost:3000", { waitUntil: "networkidle" });
+  await page.goto(process.env.BASE ?? "http://localhost:3000", { waitUntil: "networkidle" });
   await page.waitForTimeout(1000);
 
   const cells = page.locator('[role="grid"] button');

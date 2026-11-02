@@ -40,22 +40,21 @@ export default function DuelBar({ mine, rival, total, rivalTimeSec, rivalPresenc
   return (
     <section
       aria-label="대결 진행"
-      className="chunky-sm relative flex w-full items-center gap-2.5 overflow-hidden px-3.5 py-1.5"
-      style={{ boxShadow: "var(--shadow-sm)" }}
+      className="flat-box relative flex w-full flex-wrap items-center gap-x-2.5 gap-y-0.5 overflow-hidden px-3.5 py-2 wide:flex-wrap"
     >
       <span aria-hidden className="absolute inset-x-0 top-0 h-[3px]" style={{ background: "var(--surface-dim)" }}>
         <span className="absolute inset-y-0 left-0 transition-[width] duration-500 ease-out" style={{ width: pct(rival), background: "var(--ink-faint)" }} />
         <span className="absolute inset-y-0 left-0 transition-[width] duration-500 ease-out" style={{ width: pct(mine), background: "var(--primary)" }} />
       </span>
 
-      <span className="tabular shrink-0 text-[0.72rem] font-extrabold" style={{ color: "var(--ink)" }}>
+      <span className="tabular shrink-0 text-[0.75rem] font-extrabold" style={{ color: "var(--ink)" }}>
         나 {mine}
         <span style={{ color: "var(--ink-faint)" }}> · 친구 {rival}</span>
       </span>
-      <span className="min-w-0 flex-1 truncate text-[0.72rem] font-extrabold" style={{ color: tone }}>
+      <span className="min-w-0 flex-1 truncate text-[0.75rem] font-extrabold wide:order-last wide:basis-full" style={{ color: tone }}>
         {paceLine(mine, rival, finished)}
       </span>
-      <span className="shrink-0 text-[0.66rem] font-bold" style={{ color: "var(--ink-soft)" }}>
+      <span className="shrink-0 text-[0.75rem] font-bold wide:ml-auto" style={{ color: "var(--ink-soft)" }}>
         {right}
       </span>
     </section>

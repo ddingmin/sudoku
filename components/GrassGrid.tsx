@@ -1,7 +1,7 @@
 "use client";
 
 // 잔디: 날짜별 데일리 클리어를 주 단위 격자로. 진하기 = 그날 클리어한 난이도 수
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { DIFFICULTIES, DIFFICULTY_LABEL, dailyNumber, dailyKeyFromNumber, todayKey } from "@/lib/sudoku";
 import { DayClears } from "@/lib/stats";
 import { formatTime } from "@/lib/encode";
@@ -26,6 +26,7 @@ function dayLabel(dateKey: string, day: DayClears | undefined): string {
 
 export default function GrassGrid({ days, minWeeks = 20 }: GrassGridProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [pad, setPad] = useState(14);
 
   const today = todayKey();
   const todayNum = dailyNumber(today);
@@ -37,11 +38,21 @@ export default function GrassGrid({ days, minWeeks = 20 }: GrassGridProps) {
   const weeks = Math.max(minWeeks, Math.ceil((lastColStart - earliest) / 7) + 1);
   const firstNum = lastColStart - (weeks - 1) * 7;
 
-  // 처음 열릴 때 오늘(오른쪽 끝)이 보이도록
+  // 스크롤 끝이 열 경계에 맞도록 오른쪽 여백을 맞추고(왼쪽 첫 열이 반쯤 잘려 월 라벨이 깨지지 않게),
+  // 처음 열릴 때 오늘(오른쪽 끝)이 보이게 한다. 최소 14px는 마지막 열의 월 라벨 몫
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const step = CELL + GAP;
+    const base = weeks * step - GAP + 14;
+    const over = (((base - el.clientWidth) % step) + step) % step;
+    const next = 14 + (over === 0 ? 0 : step - over);
+    setPad(next);
+  }, [weeks]);
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollLeft = el.scrollWidth;
-  }, [weeks]);
+  }, [weeks, pad]);
 
   const columns: number[][] = [];
   for (let w = 0; w < weeks; w++) {
@@ -62,8 +73,8 @@ export default function GrassGrid({ days, minWeeks = 20 }: GrassGridProps) {
   return (
     <div ref={scrollRef} className="overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }} aria-label="날짜별 클리어 기록">
       {/* 오른쪽 여백: 마지막 열의 월 라벨이 넘쳐 스크롤이 생기지 않게 */}
-      <div className="flex flex-col gap-1" style={{ width: weeks * (CELL + GAP) - GAP, paddingRight: 14 }}>
-        <div className="flex text-[0.58rem] font-extrabold" style={{ gap: GAP, height: 12, color: "var(--ink-faint)" }}>
+      <div className="flex flex-col gap-1" style={{ width: weeks * (CELL + GAP) - GAP, paddingRight: pad, boxSizing: "content-box" }}>
+        <div className="flex text-[0.69rem] font-extrabold" style={{ gap: GAP, height: 14, color: "var(--ink-soft)" }}>
           {columns.map((col, i) => (
             <span key={i} className="shrink-0 leading-none whitespace-nowrap" style={{ width: CELL }}>
               {monthLabel(col) ?? ""}

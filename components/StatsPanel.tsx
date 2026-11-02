@@ -64,14 +64,19 @@ export default function StatsPanel({ stats, onOpenRecord, onClose }: StatsPanelP
     }
   };
 
-  const tile = (label: string, value: string, color?: string) => (
-    <div key={label} className="chunky-sm flex flex-col items-center gap-1 p-3" style={{ boxShadow: "var(--shadow-sm)" }}>
-      <p className="text-[0.62rem] font-extrabold" style={{ color: "var(--ink-faint)" }}>
-        {label}
-      </p>
-      <p className="font-display tabular text-lg leading-none" style={{ color: color ?? "var(--ink)" }}>
-        {value}
-      </p>
+  // 한 컨테이너를 구분선으로 나눈 띠(칸마다 박스를 두지 않는다)
+  const strip = (items: { label: string; value: string; color?: string }[]) => (
+    <div className="flat-box grid grid-cols-4 overflow-hidden">
+      {items.map((it, i) => (
+        <div key={it.label} className="flex flex-col items-center gap-1 px-1 py-3" style={{ borderLeft: i > 0 ? "1px solid var(--edge)" : undefined }}>
+          <p className="text-[0.75rem] font-extrabold" style={{ color: "var(--ink-soft)" }}>
+            {it.label}
+          </p>
+          <p className="font-display tabular text-lg leading-none" style={{ color: it.color ?? "var(--ink)" }}>
+            {it.value}
+          </p>
+        </div>
+      ))}
     </div>
   );
 
@@ -80,7 +85,7 @@ export default function StatsPanel({ stats, onOpenRecord, onClose }: StatsPanelP
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
-      style={{ background: "color-mix(in srgb, var(--ink) 45%, transparent)", backdropFilter: "blur(6px)" }}
+      style={{ background: "var(--scrim)" }}
       onClick={onClose}
     >
       <motion.div
@@ -100,50 +105,52 @@ export default function StatsPanel({ stats, onOpenRecord, onClose }: StatsPanelP
           <h2 className="swipe">
             <span className="font-display text-2xl">나의 기록</span>
           </h2>
-          <button onClick={onClose} aria-label="닫기" className="chunky-sm chunky-press flex h-9 w-9 items-center justify-center" style={{ color: "var(--ink)" }}>
-            <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <button onClick={onClose} aria-label="닫기" className="icon-btn -mr-2" style={{ color: "var(--ink)" }}>
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* 요약 */}
-        <div className="mt-5 grid grid-cols-4 gap-2">
-          {tile("플레이", `${stats.played}`)}
-          {tile("클리어", `${stats.cleared}`)}
-          {tile("완주율", `${winRate}%`)}
-          {tile("연속", streak > 0 ? `${streak}일` : "—", streak > 0 ? "var(--danger)" : undefined)}
+        <div className="mt-5">
+          {strip([
+            { label: "플레이", value: `${stats.played}` },
+            { label: "클리어", value: `${stats.cleared}` },
+            { label: "완주율", value: `${winRate}%` },
+            { label: "연속", value: streak > 0 ? `${streak}일` : "—", color: streak > 0 ? "var(--danger)" : undefined },
+          ])}
         </div>
 
         {/* 잔디 */}
         <div className="mt-6 flex items-end justify-between">
-          <h3 className="text-[0.68rem] font-extrabold uppercase tracking-wider" style={{ color: "var(--ink-faint)" }}>
+          <h3 className="text-[0.8rem] font-extrabold" style={{ color: "var(--ink-faint)" }}>
             매일의 기록
           </h3>
-          <p className="tabular text-[0.66rem] font-bold" style={{ color: "var(--ink-soft)" }}>
+          <p className="tabular text-[0.75rem] font-bold" style={{ color: "var(--ink-soft)" }}>
             {dayCount > 0 ? `${dayCount}일 클리어 · 최장 ${maxStreak}일 연속` : "아직 기록 없음"}
           </p>
         </div>
-        <div className="chunky-sm mt-2 p-3" style={{ boxShadow: "var(--shadow-sm)" }}>
+        <div className="flat-box mt-2 p-3">
           <GrassGrid days={stats.days} />
         </div>
 
         {/* 난이도별 베스트 */}
-        <h3 className="mt-6 text-[0.68rem] font-extrabold uppercase tracking-wider" style={{ color: "var(--ink-faint)" }}>
+        <h3 className="mt-6 text-[0.8rem] font-extrabold" style={{ color: "var(--ink-faint)" }}>
           난이도별 베스트
         </h3>
-        <div className="mt-2 grid grid-cols-4 gap-2">
-          {DIFFICULTIES.map((d) =>
-            tile(
-              DIFFICULTY_LABEL[d],
-              stats.bests[d] !== undefined ? formatTime(stats.bests[d]!) : "—",
-              stats.bests[d] !== undefined ? "var(--primary)" : "var(--ink-faint)",
-            ),
+        <div className="mt-2">
+          {strip(
+            DIFFICULTIES.map((d) => ({
+              label: DIFFICULTY_LABEL[d],
+              value: stats.bests[d] !== undefined ? formatTime(stats.bests[d]!) : "—",
+              color: stats.bests[d] !== undefined ? "var(--primary)" : "var(--ink-faint)",
+            })),
           )}
         </div>
 
         {/* 최근 게임 */}
-        <h3 className="mt-6 text-[0.68rem] font-extrabold uppercase tracking-wider" style={{ color: "var(--ink-faint)" }}>
+        <h3 className="mt-6 text-[0.8rem] font-extrabold" style={{ color: "var(--ink-faint)" }}>
           최근 게임
         </h3>
         {stats.history.length === 0 ? (
@@ -169,29 +176,29 @@ export default function StatsPanel({ stats, onOpenRecord, onClose }: StatsPanelP
                 moves: h.moves,
               };
               return (
-                <li key={i} className="chunky-sm flex items-center justify-between gap-2 pr-4" style={{ boxShadow: "var(--shadow-sm)" }}>
+                <li key={i} className="flat-box flex items-center justify-between gap-2 pr-3">
                   {/* 행 클릭 → 게임 종료 화면과 동일한 결과 모달 (리캡·공유·대결 신청) */}
                   <button type="button" onClick={() => onOpenRecord(record)} className="min-w-0 flex-1 py-3 pl-4 text-left">
-                    <p className="text-[0.8rem] font-extrabold">
+                    <p className="text-[0.85rem] font-extrabold">
                       {DIFFICULTY_LABEL[h.difficulty]}
                       {record.best && (
-                        <span className="sticker ml-2 rotate-3" style={{ background: "var(--danger)", color: "#ffffff", fontSize: "0.55rem", padding: "3px 6px" }}>
+                        <span className="sticker ml-2 rotate-3" style={{ background: "var(--danger)", color: "var(--on-danger)", fontSize: "0.69rem", padding: "3px 6px" }}>
                           BEST
                         </span>
                       )}
                       {h.duel && (
                         <span
                           className="sticker ml-2 -rotate-3"
-                          style={{ background: h.duel === "win" ? "var(--pop)" : "var(--surface-dim)", color: "var(--ink)", fontSize: "0.55rem", padding: "3px 6px" }}
+                          style={{ background: h.duel === "win" ? "var(--pop)" : "var(--surface-dim)", color: "var(--ink)", fontSize: "0.69rem", padding: "3px 6px" }}
                         >
                           대결 {h.duel === "win" ? "승" : h.duel === "lose" ? "패" : "무"}
                         </span>
                       )}
-                      <span className="ml-1.5 inline-block whitespace-nowrap text-[0.66rem] font-bold" style={{ color: "var(--ink-faint)" }}>
+                      <span className="ml-1.5 inline-block whitespace-nowrap text-[0.75rem] font-bold" style={{ color: "var(--ink-faint)" }}>
                         {h.duel ? "친구와 대결" : h.daily ? "오늘의 스도쿠" : "자유"} · {h.dateKey.replace(/-/g, ".")}
                       </span>
                     </p>
-                    <p className="tabular mt-1.5 flex items-center gap-3 text-[0.72rem] font-bold" style={{ color: "var(--ink-soft)" }}>
+                    <p className="tabular mt-1.5 flex items-center gap-3 text-[0.78rem] font-bold" style={{ color: "var(--ink-soft)" }}>
                       <span className="flex items-center gap-1" aria-label={`클리어 타임 ${formatTime(h.timeSec)}`}>
                         <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <circle cx="12" cy="12" r="10" />
@@ -218,8 +225,8 @@ export default function StatsPanel({ stats, onOpenRecord, onClose }: StatsPanelP
                   <button
                     onClick={() => shareHistory(record)}
                     aria-label="이 기록 공유"
-                    className="chunky-sm chunky-press flex h-9 w-9 shrink-0 items-center justify-center"
-                    style={{ background: "var(--primary)", color: "var(--on-primary)" }}
+                    className="flat-box flex h-9 w-9 shrink-0 items-center justify-center"
+                    style={{ background: "var(--primary)", color: "var(--on-primary)", borderColor: "var(--primary)" }}
                   >
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
@@ -237,7 +244,7 @@ export default function StatsPanel({ stats, onOpenRecord, onClose }: StatsPanelP
         <div className="mt-6 flex items-center justify-between gap-3 p-4" style={{ background: "var(--surface)", border: "2px dashed var(--ink-faint)", borderRadius: "var(--r-md)" }}>
           <div className="min-w-0">
             <p className="text-[0.78rem] font-extrabold">다른 기기로 기록 옮기기</p>
-            <p className="mt-0.5 text-[0.66rem] font-bold leading-snug" style={{ color: "var(--ink-faint)" }}>
+            <p className="mt-0.5 text-[0.75rem] font-bold leading-snug" style={{ color: "var(--ink-faint)" }}>
               새 기기에서 열면 기록이 합쳐집니다
             </p>
           </div>

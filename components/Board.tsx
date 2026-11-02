@@ -47,17 +47,17 @@ const Cell = memo(function Cell({
   if (peer) bg = "var(--peer)";
   if (sameValue) bg = "var(--same)";
   if (wrong && !selected) bg = "var(--danger-wash)";
-  if (selected) bg = "var(--pop)";
+  if (selected) bg = wrong ? "var(--danger)" : "var(--pop)";
 
   let numColor = given ? "var(--ink)" : wrong ? "var(--danger)" : "var(--primary)";
-  if (selected) numColor = wrong ? "var(--danger)" : "var(--on-pop)";
+  if (selected) numColor = wrong ? "var(--on-danger)" : "var(--on-pop)";
 
   return (
     <button
       style={style}
       onClick={() => onSelect(idx)}
       aria-label={`${r + 1}행 ${c + 1}열${value ? ` ${value}` : " 빈 칸"}`}
-      className="relative flex items-center justify-center select-none"
+      className="cell relative flex items-center justify-center select-none"
     >
       <span className="absolute inset-0 transition-colors duration-150" style={{ background: bg }} />
       {/* 친구 마커: 친구가 채운 칸 — 숫자는 보이지 않고 위치만 */}
@@ -65,7 +65,7 @@ const Cell = memo(function Cell({
         <span
           aria-hidden
           className="anim-pop pointer-events-none absolute right-[9%] top-[9%] rounded-[3px]"
-          style={{ width: "24%", height: "24%", background: "var(--ink-faint)", opacity: 0.75 }}
+          style={{ width: "24%", height: "24%", background: "var(--ink-faint)", opacity: 0.55 }}
         />
       )}
       {fxKind && fxKind !== "pop" && (
@@ -76,7 +76,7 @@ const Cell = memo(function Cell({
           }`}
           style={{
             animationDelay: `${fxDelay}ms`,
-            ...(fxKind === "error" ? { animation: "error-pulse 0.4s ease-in-out 2" } : {}),
+            ...(fxKind === "error" ? (wrong && selected ? { display: "none" } : { animation: "error-pulse 0.4s ease-in-out 2" }) : {}),
           }}
         />
       )}
@@ -86,7 +86,7 @@ const Cell = memo(function Cell({
           className={`relative leading-none font-extrabold ${
             fxKind === "pop" ? "anim-pop" : fxKind === "error" ? "anim-shake" : ""
           }`}
-          style={{ color: numColor, fontSize: "clamp(1.1rem, 4.4vmin, 1.7rem)" }}
+          style={{ color: numColor, fontSize: "5.6cqw" }}
         >
           {value}
         </span>
@@ -98,8 +98,8 @@ const Cell = memo(function Cell({
                 key={i}
                 className="tabular flex items-center justify-center leading-none font-bold"
                 style={{
-                  fontSize: "clamp(0.42rem, 1.55vmin, 0.62rem)",
-                  color: "var(--ink-faint)",
+                  fontSize: "max(9px, 2.8cqw)",
+                  color: "var(--ink-soft)",
                 }}
               >
                 {notes & (1 << (i + 1)) ? i + 1 : ""}
@@ -135,6 +135,7 @@ export default function Board({ values, notes, given, solution, selected, fx, ri
       aria-label="스도쿠 보드"
       className="grid aspect-square w-full grid-cols-9 grid-rows-9 overflow-hidden"
       style={{
+        containerType: "inline-size",
         background: "var(--surface)",
         border: "2.5px solid var(--edge)",
         borderRadius: "var(--r-lg)",

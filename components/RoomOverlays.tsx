@@ -43,10 +43,10 @@ export function RoomBanner({ tone, children, action }: { tone: "info" | "warn"; 
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       role="status"
-      className="chunky-sm flex w-full items-center justify-between gap-3 px-3.5 py-2 text-[0.76rem] font-extrabold"
-      style={{ background: tone === "warn" ? "var(--danger-wash)" : "var(--surface)", color: tone === "warn" ? "var(--danger)" : "var(--ink)", boxShadow: "var(--shadow-sm)" }}
+      className="flat-box flex w-full items-center justify-between gap-3 px-3.5 py-2 text-[0.8rem] font-extrabold"
+      style={{ background: tone === "warn" ? "var(--danger-wash)" : "var(--surface)", color: tone === "warn" ? "var(--danger)" : "var(--ink)" }}
     >
-      <span className="min-w-0 truncate">{children}</span>
+      <span className="min-w-0">{children}</span>
       {action && (
         <button onClick={action.onClick} className="shrink-0 underline underline-offset-4" style={{ color: "var(--ink)" }}>
           {action.label}

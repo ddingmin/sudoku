@@ -60,7 +60,7 @@ export default function RoomLobby({ phase, difficulty, roomUrl, error, onCreate,
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
-      style={{ background: "color-mix(in srgb, var(--ink) 45%, transparent)", backdropFilter: "blur(6px)" }}
+      style={{ background: "var(--scrim)" }}
       onClick={phase === "pick" || phase === "error" ? onCancel : undefined}
     >
       <motion.div
@@ -77,8 +77,8 @@ export default function RoomLobby({ phase, difficulty, roomUrl, error, onCreate,
           <h2 className="swipe">
             <span className="font-display text-2xl">친구와 대결</span>
           </h2>
-          <button onClick={onCancel} aria-label="닫기" className="chunky-sm chunky-press flex h-9 w-9 items-center justify-center" style={{ color: "var(--ink)" }}>
-            <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <button onClick={onCancel} aria-label="닫기" className="icon-btn -mr-2" style={{ color: "var(--ink)" }}>
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
@@ -89,7 +89,7 @@ export default function RoomLobby({ phase, difficulty, roomUrl, error, onCreate,
             <p className="mt-3 text-[0.8rem] font-bold leading-snug" style={{ color: "var(--ink-soft)" }}>
               같은 문제를 같은 순간에 풀어요. 친구가 채운 칸이 보드에 점으로 보이고, 먼저 다 푸는 쪽이 이겨요. 대결 중엔 힌트를 쓸 수 없어요.
             </p>
-            <p className="mt-5 text-[0.68rem] font-extrabold uppercase tracking-wider" style={{ color: "var(--ink-faint)" }}>
+            <p className="mt-5 text-[0.8rem] font-extrabold" style={{ color: "var(--ink-faint)" }}>
               난이도
             </p>
             <div className="mt-2 grid grid-cols-4 gap-2">
@@ -100,7 +100,7 @@ export default function RoomLobby({ phase, difficulty, roomUrl, error, onCreate,
                     key={d}
                     onClick={() => setPicked(d)}
                     aria-pressed={active}
-                    className="chunky-sm chunky-press py-3 text-[0.85rem] font-extrabold"
+                    className="flat-box py-3 text-[0.85rem] font-extrabold"
                     style={{ background: active ? "var(--pop)" : "var(--surface)", color: active ? "var(--on-pop)" : "var(--ink)" }}
                   >
                     {DIFFICULTY_LABEL[d]}
@@ -165,7 +165,7 @@ export default function RoomLobby({ phase, difficulty, roomUrl, error, onCreate,
                 </svg>
                 링크 보내기
               </button>
-              <button onClick={copy} aria-label="링크 복사" className="chunky chunky-press flex w-14 items-center justify-center" style={{ color: "var(--ink)" }}>
+              <button onClick={copy} aria-label="링크 복사" className="flat-box flex w-14 items-center justify-center" style={{ color: "var(--ink)" }}>
                 <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -181,7 +181,7 @@ export default function RoomLobby({ phase, difficulty, roomUrl, error, onCreate,
         {phase === "error" && (
           <>
             <p className="mt-4 text-[0.9rem] font-extrabold">{error ?? "대결에 들어갈 수 없어요"}</p>
-            <button onClick={onCancel} className="chunky chunky-press mt-5 w-full py-3.5 text-[0.95rem] font-extrabold" style={{ color: "var(--ink)" }}>
+            <button onClick={onCancel} className="flat-box mt-5 w-full py-3.5 text-[0.95rem] font-extrabold" style={{ color: "var(--ink)" }}>
               홈으로
             </button>
           </>

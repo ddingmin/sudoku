@@ -7,22 +7,22 @@ interface ControlsProps {
   hintsUsed: number;
   hintsDisabled?: boolean; // 실시간 대결 중엔 힌트 없음
   onUndo: () => void;
-  onErase: () => void;
   onToggleNote: () => void;
   onHint: () => void;
 }
 
-function ControlButton({
+// 도구 버튼: 보더만(.flat-box), 아이콘 + 라벨 가로 배치, 높이 44px
+function ToolButton({
   label,
+  text,
   active,
-  badge,
   disabled,
   onClick,
   children,
 }: {
-  label: string;
+  label: string; // aria-label
+  text: string; // 보이는 라벨
   active?: boolean;
-  badge?: string;
   disabled?: boolean;
   onClick: () => void;
   children: React.ReactNode;
@@ -33,60 +33,43 @@ function ControlButton({
       disabled={disabled}
       aria-label={label}
       aria-pressed={active}
-      className="chunky-sm chunky-press relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 disabled:opacity-30"
-      style={{
-        background: active ? "var(--pop)" : "var(--surface)",
-        color: active ? "var(--on-pop)" : "var(--ink)",
-      }}
+      className="flat-box flex h-11 min-w-0 items-center justify-center gap-1.5 px-2 text-[0.8rem] font-extrabold"
+      style={active ? { background: "var(--pop)", color: "var(--on-pop)" } : undefined}
     >
       {children}
-      <span className="text-[0.66rem] font-extrabold leading-none">{active ? `${label} ON` : label}</span>
-      {badge && (
-        <span
-          className="tabular absolute -right-1.5 -top-2 flex h-5 w-5 items-center justify-center rounded-full text-[0.6rem] font-extrabold leading-none"
-          style={{ background: "var(--primary)", color: "var(--on-primary)", border: "2px solid var(--edge)" }}
-        >
-          {badge}
-        </span>
-      )}
+      <span className="truncate leading-none">{text}</span>
     </button>
   );
 }
 
-const icon = "h-4.5 w-4.5";
+const icon = "h-[18px] w-[18px] shrink-0";
 
-export default function Controls({ noteMode, hintsUsed, hintsDisabled, onUndo, onErase, onToggleNote, onHint }: ControlsProps) {
+export default function Controls({ noteMode, hintsUsed, hintsDisabled, onUndo, onToggleNote, onHint }: ControlsProps) {
   return (
-    <div className="flex w-full gap-2">
-      <ControlButton label="되돌리기" onClick={onUndo}>
+    <div className="grid w-full grid-cols-3 gap-2">
+      <ToolButton label="되돌리기" text="되돌리기" onClick={onUndo}>
         <svg className={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9 14 4 9l5-5" />
           <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
         </svg>
-      </ControlButton>
-      <ControlButton label="지우기" onClick={onErase}>
-        <svg className={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21" />
-          <path d="M22 21H7" />
-        </svg>
-      </ControlButton>
-      <ControlButton label="메모" active={noteMode} onClick={onToggleNote}>
+      </ToolButton>
+      <ToolButton label="메모" text={noteMode ? "메모 ON" : "메모"} active={noteMode} onClick={onToggleNote}>
         <svg className={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
         </svg>
-      </ControlButton>
-      <ControlButton
-        label={hintsDisabled ? "힌트 없음" : "힌트"}
+      </ToolButton>
+      <ToolButton
+        label="힌트"
+        text={hintsDisabled ? "힌트 없음" : `힌트 ${MAX_HINTS - hintsUsed}`}
         onClick={onHint}
         disabled={hintsDisabled || hintsUsed >= MAX_HINTS}
-        badge={hintsDisabled ? undefined : `${MAX_HINTS - hintsUsed}`}
       >
         <svg className={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
           <path d="M9 18h6" />
           <path d="M10 22h4" />
         </svg>
-      </ControlButton>
+      </ToolButton>
     </div>
   );
 }
