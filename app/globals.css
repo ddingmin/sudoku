@@ -553,6 +553,7 @@ button.flat-box:disabled {
 @media (min-width: 1024px) and (min-height: 640px), (min-width: 640px) and (orientation: landscape) and (min-height: 640px) {
   .game {
     grid-template-rows: 1fr auto;
+    row-gap: 0; /* 헤더 아래 여백과 도구 줄 위 여백을 같게 */
   }
   .game-top {
     display: flex;
@@ -561,12 +562,17 @@ button.flat-box:disabled {
     display: grid;
     flex: 1;
     grid-template-columns: 1fr auto;
-    align-content: space-between;
+    /* 워드마크 / 여백 / 모드·실수 / 타이머 / 여백 — 두 여백은 같은 크기, 모드와 타이머는 한 묶음 */
+    grid-template-rows: auto minmax(0, 1fr) auto auto minmax(0, 1fr);
     align-items: center;
-    row-gap: 12px;
   }
   .hdr-word {
     grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .hdr-mode,
+  .hdr-miss {
+    grid-row: 3;
   }
   .hdr-status,
   .hdr-right {
@@ -577,6 +583,8 @@ button.flat-box:disabled {
   }
   .hdr-timer {
     grid-column: 1 / -1;
+    grid-row: 4;
+    margin-top: 12px;
     font-size: clamp(2rem, calc(var(--board) / 12.5), 4rem);
   }
   .game-bottom {
