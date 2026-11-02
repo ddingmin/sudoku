@@ -46,7 +46,7 @@ const icon = "h-[18px] w-[18px] shrink-0";
 
 export default function Controls({ noteMode, hintsUsed, hintsDisabled, onUndo, onToggleNote, onHint }: ControlsProps) {
   return (
-    <div className="grid w-full grid-cols-3 gap-2">
+    <div className="game-tools grid w-full grid-cols-3 gap-2">
       <ToolButton label="되돌리기" text="되돌리기" onClick={onUndo}>
         <svg className={icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9 14 4 9l5-5" />

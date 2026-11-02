@@ -47,9 +47,9 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
   const iconBtn = "icon-btn";
 
   return (
-    <header className="w-full">
+    <header className="hdr w-full">
       {/* 워드마크 라인 */}
-      <div className="flex items-center justify-between">
+      <div className="hdr-word flex items-center justify-between">
         <h1 className="flex items-center gap-2.5">
           <span className="swipe">
             <span className="font-display text-[1.9rem] leading-none">스도쿠</span>
@@ -90,8 +90,8 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
       </div>
 
       {/* 상태 라인 */}
-      <div className="mt-1 flex items-center justify-between">
-        <div className="relative" ref={menuRef}>
+      <div className="hdr-status mt-1 flex items-center justify-between">
+        <div className="hdr-mode relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen((o) => !o)}
             aria-expanded={menuOpen}
@@ -128,9 +128,10 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
                             onNewGame(d, isDaily);
                             setMenuOpen(false);
                           }}
-                          className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-[0.85rem] font-bold transition-colors"
+                          className="menu-item flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-[0.85rem] font-bold transition-colors"
+                          data-active={active}
                           style={{
-                            background: active ? "var(--pop)" : "transparent",
+                            background: active ? "var(--pop)" : undefined,
                             color: active ? "var(--on-pop)" : "var(--ink)",
                           }}
                         >
@@ -150,8 +151,8 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
           </AnimatePresence>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-[0.9rem] font-extrabold" aria-label={`실수 ${mistakes}회`}>
+        <div className="hdr-right flex items-center gap-3">
+          <span className="hdr-miss flex items-center gap-1 text-[0.9rem] font-extrabold" aria-label={`실수 ${mistakes}회`}>
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke={mistakes > 0 ? "var(--danger)" : "var(--ink-faint)"} strokeWidth="3.5" strokeLinecap="round" aria-hidden>
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
@@ -160,7 +161,7 @@ export default function Header({ difficulty, daily, dateKey, elapsed, mistakes, 
             </span>
           </span>
           {/* Bagel Fat One은 tabular-nums를 지원하지 않아(자폭 0.47~0.69em) 글자별 고정폭으로 흔들림을 막는다 */}
-          <span className="font-display tabular text-[1.4rem] leading-none" style={{ color: "var(--ink)" }}>
+          <span className="hdr-timer font-display tabular text-[1.4rem] leading-none" style={{ color: "var(--ink)" }}>
             {[...formatTime(elapsed)].map((ch, i) => (
               <span key={i} className="inline-block text-center" style={{ width: ch === ":" ? "0.36em" : "0.7em" }}>
                 {ch}

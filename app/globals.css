@@ -246,6 +246,34 @@ button.flat-box:disabled {
 }
 
 /* 숫자 키: 청키 + 하드 섀도. 완료되면 섀도를 빼 눌러지지 않음을 보이되 숫자는 읽히게 */
+.key {
+  container-type: size; /* 키 안의 숫자·아이콘은 키 크기에 비례(cqw/cqh) */
+}
+.key-n {
+  font-size: min(58cqw, 45cqh);
+}
+.key-c {
+  font-size: max(11px, min(22cqw, 14cqh));
+  margin-top: 3cqh;
+}
+.erase-i {
+  width: max(18px, min(34cqw, 26cqh));
+  height: max(18px, min(34cqw, 26cqh));
+}
+.erase-l {
+  font-size: max(11px, min(19cqw, 14cqh));
+  margin-top: 3cqh;
+}
+
+/* 포인터 기기 hover: 면 전환만. 활성/선택 색은 인라인이 우선하고 disabled는 제외 */
+@media (hover: hover) {
+  .key:hover:not(:disabled),
+  button.flat-box:hover:not(:disabled):not([aria-pressed="true"]),
+  .menu-item:hover:not([data-active="true"]) {
+    background: var(--surface-dim);
+  }
+}
+
 .key:disabled {
   box-shadow: none;
   transform: none;
@@ -459,7 +487,7 @@ button.flat-box:disabled {
 .game-pad {
   flex: 1 1 auto;
   min-height: calc(2 * var(--key-min, 52px) + 8px);
-  max-height: 224px;
+  max-height: 200px; /* 키 높이 상한 96px */
 }
 
 @media (min-width: 1024px), (min-width: 640px) and (orientation: landscape) {
@@ -494,6 +522,95 @@ button.flat-box:disabled {
     max-height: none;
     --key-h: clamp(36px, calc((100dvh - 21rem) / 4), 72px);
     grid-auto-rows: var(--key-h);
+  }
+  /* 낮은 화면 압축 배치: 숫자와 남은 수를 가로로, 글자는 고정 크기 */
+  .game-pad .key:not(:last-child) {
+    flex-direction: row;
+    gap: 10px;
+  }
+  .game-pad .key-n {
+    font-size: 1.4rem;
+  }
+  .game-pad .key-c {
+    font-size: 0.75rem;
+    margin-top: 0;
+  }
+  .game-pad .key:last-child {
+    flex-direction: row;
+    gap: 8px;
+  }
+  .game-pad .erase-i {
+    width: 18px;
+    height: 18px;
+  }
+  .game-pad .erase-l {
+    font-size: 0.8rem;
+    margin-top: 0;
+  }
+}
+
+/* 넓은 화면 + 높이 여유: 레일을 채운다 — 타이머 별도 줄, 정사각형 키, 숫자 비례 */
+@media (min-width: 1024px) and (min-height: 640px), (min-width: 640px) and (orientation: landscape) and (min-height: 640px) {
+  .game {
+    grid-template-rows: 1fr auto;
+  }
+  .game-top {
+    display: flex;
+  }
+  .hdr {
+    display: grid;
+    flex: 1;
+    grid-template-columns: 1fr auto;
+    align-content: space-between;
+    align-items: center;
+    row-gap: 12px;
+  }
+  .hdr-word {
+    grid-column: 1 / -1;
+  }
+  .hdr-status,
+  .hdr-right {
+    display: contents;
+  }
+  .hdr-miss {
+    justify-self: end;
+  }
+  .hdr-timer {
+    grid-column: 1 / -1;
+    font-size: clamp(2rem, calc(var(--board) / 12.5), 4rem);
+  }
+  .game-bottom {
+    gap: 18px;
+  }
+  .game-tools .flat-box {
+    height: 52px;
+  }
+  .hdr-mode > button {
+    height: 44px;
+  }
+  .game-pad {
+    --key-h: clamp(36px, calc((var(--board) - 400px) / 3), 106px);
+    gap: 10px;
+    grid-template-rows: repeat(3, var(--key-h)) 72px;
+    grid-auto-rows: auto;
+  }
+  .game-pad .key:not(:last-child) {
+    flex-direction: column;
+    gap: 0;
+  }
+  .game-pad .key-n {
+    font-size: min(58cqw, 45cqh);
+  }
+  .game-pad .key-c {
+    font-size: max(11px, min(22cqw, 14cqh));
+    margin-top: 3cqh;
+  }
+  .game-pad .erase-i {
+    width: 40cqh;
+    height: 40cqh;
+  }
+  .game-pad .erase-l {
+    font-size: clamp(0.9rem, 30cqh, 1.4rem);
   }
 }
 
